@@ -14,9 +14,9 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
   });
 
   const fields = [
+    ["olevel_subjects", "O-Level Subjects", true],
     ["uce_distinctions", "UCE Distinctions", true],
     ["uce_credits", "UCE Credits", true],
-    ["olevel_subjects", "O-Level Subjects", true],
     ["average_olevel_grade", "Average O-Level Grade", true],
     ["count_weak_grades_olevel", "Count of Weak Grades", true],
     ["std_dev_olevel_grade", "Std Dev of Grades", true],
@@ -44,16 +44,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="UCE Credits"
-            type="number"
-            required
-            {...req("uce_credits")}
-            onChange={(e) => onChange("uce_credits", Number(e.target.value))}
-          />
         </Grid>
         {fields.map(([field, label]) => (
           <Grid item xs={12} sm={6} key={field}>
