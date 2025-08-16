@@ -1,0 +1,11 @@
+FastAPI
+uvicorn
+pydantic
+scikit-learn
+numpy
+pandas
+joblib
+python-multipart
+CORS
+pytest
+httpx
