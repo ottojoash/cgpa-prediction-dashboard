@@ -43,14 +43,13 @@ const SummarySidebar = ({ data }) => {
     "uace_year_code",
     "general_paper",
     "alevel_average_grade_weight",
-    "alevel_total_grade_weight",
     "alevel_std_dev_grade_weight",
     "alevel_dominant_grade_weight",
     "alevel_count_weak_grades",
     "high_school_performance_variance",
     "high_school_performance_stability_index",
   ];
-  const inst = ["campus_id_code", "program_id_code", "curriculum_id_code"];
+  const inst = ["campus_id_code", "program_id_code"];
 
   return (
     <Paper
