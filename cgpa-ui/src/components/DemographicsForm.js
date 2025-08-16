@@ -19,29 +19,7 @@ const DemographicsForm = ({ data, onChange, touched = {} }) => {
         Demographic Details
       </Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            {...field("age_at_entry")}
-            label="Age at Entry"
-            type="number"
-            fullWidth
-            required
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            {...field("gender")}
-            label="Gender"
-            fullWidth
-            required
-            onChange={(e) => onChange("gender", Number(e.target.value))}
-          >
-            <MenuItem value={1}>Male</MenuItem>
-            <MenuItem value={0}>Female</MenuItem>
-          </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={4}>
           <TextField
             select
             {...field("level")}
@@ -56,6 +34,45 @@ const DemographicsForm = ({ data, onChange, touched = {} }) => {
             <MenuItem value={3}>Postgraduate</MenuItem>
           </TextField>
         </Grid>
+        <Grid item xs={12} sm={4}>
+          <TextField
+            select
+            name="marital_status"
+            label="Marital Status"
+            fullWidth
+            value={data.marital_status}
+            onChange={(e) => onChange("marital_status", Number(e.target.value))}
+          >
+            <MenuItem value={0}>Single</MenuItem>
+            <MenuItem value={1}>Married</MenuItem>
+            <MenuItem value={2}>Other</MenuItem>
+          </TextField>
+        </Grid>
+
+        <Grid item xs={12} sm={4}>
+          <TextField
+            select
+            {...field("gender")}
+            label="Gender"
+            fullWidth
+            required
+            onChange={(e) => onChange("gender", Number(e.target.value))}
+          >
+            <MenuItem value={1}>Male</MenuItem>
+            <MenuItem value={0}>Female</MenuItem>
+          </TextField>
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            {...field("age_at_entry")}
+            label="Age at Entry"
+            type="number"
+            fullWidth
+            required
+          />
+        </Grid>
+
         <Grid item xs={12} sm={6}>
           <TextField
             {...field("year_of_entry_code")}
