@@ -44,6 +44,7 @@ jest-dist/
 # === Misc ===
 *.out
 *.lock
+cgpa-ui/node_modules/.cache/
 cgpa-ui/node_modules/.cache/.eslintcache
 cgpa-ui/node_modules/.cache/.eslintcache
 cgpa-ui/node_modules/.cache/default-development/0.pack
