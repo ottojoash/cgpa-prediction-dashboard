@@ -14,13 +14,11 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
   });
 
   const fields = [
+    ["uce_distinctions", "UCE Distinctions", true],
+    ["uce_credits", "UCE Credits", true],
+    ["olevel_subjects", "O-Level Subjects", true],
     ["average_olevel_grade", "Average O-Level Grade", true],
-    ["best_sum_out_of_six", "Best Sum of 6", true],
-    ["best_sum_out_of_eight", "Best Sum of 8", true],
-    ["best_sum_out_of_ten", "Best Sum of 10", true],
     ["count_weak_grades_olevel", "Count of Weak Grades", true],
-    ["highest_olevel_grade", "Highest Grade", true],
-    ["lowest_olevel_grade", "Lowest Grade", true],
     ["std_dev_olevel_grade", "Std Dev of Grades", true],
   ];
 
