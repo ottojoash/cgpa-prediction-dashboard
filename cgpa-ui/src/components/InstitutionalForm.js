@@ -14,12 +14,6 @@ const programOptions = [
   { label: "Bachelor of Education", value: 103 },
 ];
 
-const curriculumOptions = [
-  { label: "IT Curriculum 2020", value: 204 },
-  { label: "BBA Curriculum 2019", value: 205 },
-  { label: "Education Curriculum 2021", value: 206 },
-];
-
 function InstitutionalForm({ data, onChange, touched = {} }) {
   const req = (name) => ({
     value: data[name] ?? "",
@@ -70,22 +64,17 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             ))}
           </TextField>
         </Grid>
+        +{" "}
         <Grid item xs={12} sm={6}>
           <TextField
             select
             fullWidth
-            label="Curriculum"
-            required
-            {...req("curriculum_id_code")}
-            onChange={(e) =>
-              onChange("curriculum_id_code", Number(e.target.value))
-            }
+            label="Nationality"
+            value={data.is_national}
+            onChange={(e) => onChange("is_national", Number(e.target.value))}
           >
-            {curriculumOptions.map((o) => (
-              <MenuItem key={o.value} value={o.value}>
-                {o.label}
-              </MenuItem>
-            ))}
+            <MenuItem value={1}>National</MenuItem>
+            <MenuItem value={0}>International</MenuItem>
           </TextField>
         </Grid>
       </Grid>
