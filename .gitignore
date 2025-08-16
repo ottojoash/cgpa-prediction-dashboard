@@ -1,4 +1,5 @@
 # === Node / React (Frontend) ===
+cgpa-ui/node_modules
 node_modules/
 build/
 dist/
