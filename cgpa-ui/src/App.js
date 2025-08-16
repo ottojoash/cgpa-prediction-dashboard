@@ -128,7 +128,7 @@ function App() {
     setResult(null);
     try {
       const API = process.env.REACT_APP_API_BASE || "http://localhost:8000";
-      const response = await axios.post(`${API}/predict`, castPayload);
+      const response = await axios.post(`${API}/api/predict`, castPayload);
       setResult(response.data);
       setActiveStep(steps.length - 1);
     } catch (err) {
