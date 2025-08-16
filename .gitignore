@@ -48,3 +48,4 @@ cgpa-ui/node_modules/.cache/.eslintcache
 cgpa-ui/node_modules/.cache/default-development/0.pack
 cgpa-ui/node_modules/.cache/default-development/index.pack
 cgpa-ui/node_modules/.cache/.eslintcache
+*.pack
