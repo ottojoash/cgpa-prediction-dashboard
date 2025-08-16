@@ -64,7 +64,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             ))}
           </TextField>
         </Grid>
-        +{" "}
+
         <Grid item xs={12} sm={6}>
           <TextField
             select
