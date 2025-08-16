@@ -44,7 +44,6 @@ const ALevelForm = ({ data, onChange, touched = {} }) => {
 
         {[
           ["alevel_average_grade_weight", "Average Grade Weight"],
-          ["alevel_total_grade_weight", "Total Grade Weight"],
           ["alevel_std_dev_grade_weight", "Std. Dev. Grade Weight"],
           ["alevel_dominant_grade_weight", "Dominant Grade Weight"],
           ["alevel_count_weak_grades", "Count of Weak Grades"],
