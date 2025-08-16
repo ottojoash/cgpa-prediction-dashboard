@@ -49,7 +49,6 @@ function App() {
     alevel_count_weak_grades: "",
     campus_id_code: "",
     program_id_code: "",
-    curriculum_id_code: "",
     high_school_performance_variance: "",
     high_school_performance_stability_index: "",
   });
@@ -90,7 +89,6 @@ function App() {
       year_of_entry_code: n(formData.year_of_entry_code),
       campus_id_code: n(formData.campus_id_code),
       program_id_code: n(formData.program_id_code),
-      curriculum_id_code: n(formData.curriculum_id_code),
       high_school_performance_variance: f(
         formData.high_school_performance_variance
       ),
