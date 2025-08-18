@@ -24,7 +24,6 @@ const Row = ({ label, value }) => (
 
 const SummarySidebar = ({ data }) => {
   const demog = [
-    "level",
     "marital_status",
     "gender",
     "age_at_entry",
@@ -49,7 +48,7 @@ const SummarySidebar = ({ data }) => {
     "high_school_performance_variance",
     "high_school_performance_stability_index",
   ];
-  const inst = ["campus_id_code", "program_id_code"];
+  const inst = ["level", "campus_id_code", "program_id_code", "is_national"];
 
   return (
     <Paper
