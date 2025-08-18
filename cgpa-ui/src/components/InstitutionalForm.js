@@ -8,9 +8,20 @@ import {
   CircularProgress,
 } from "@mui/material";
 
+const LEVEL_LABELS = {
+  0: "Certificate",
+  1: "Diploma",
+  2: "Bachelor’s",
+  3: "Master’s",
+  4: "PhD",
+  5: "Short Courses",
+  6: "Postgraduate Diploma",
+  7: "Unknown",
+};
+
 function InstitutionalForm({ data, onChange, touched = {} }) {
   const [campusOptions, setCampusOptions] = useState([]);
-  const [programRows, setProgramRows] = useState([]); // [{campus_id_code, program_id_code, program_name}]
+  const [programRows, setProgramRows] = useState([]); // {campus_id_code, level_code, program_core_id, program_id_code, program_name}
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -61,16 +72,20 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             label: (r.campus_name || "").trim(),
             value: Number(r.campus_id_code),
           }))
-          .filter((o) => o.label && o.label !== "" && Number.isFinite(o.value))
+          .filter(
+            (o) => o.label && o.label !== "" && Number.isFinite(o.value)
+          )
           .sort((a, b) => a.label.localeCompare(b.label));
 
-        // programs_by_campus.csv
+        // programs_by_campus.csv (with level & core)
         const pRes = await fetch("/lookups/programs_by_campus.csv");
         if (!pRes.ok) throw new Error("programs_by_campus.csv not found");
         const pTxt = await pRes.text();
         const pRows = parseCSV(pTxt)
           .map((r) => ({
             campus_id_code: Number(r.campus_id_code),
+            level_code: Number(r.level_code),
+            program_core_id: Number(r.program_core_id),
             program_id_code: Number(r.program_id_code),
             program_name: (r.program_name || "").trim(),
           }))
@@ -78,7 +93,9 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             (r) =>
               r.program_name !== "" &&
               Number.isFinite(r.program_id_code) &&
-              Number.isFinite(r.campus_id_code)
+              Number.isFinite(r.campus_id_code) &&
+              Number.isFinite(r.level_code) &&
+              Number.isFinite(r.program_core_id)
           );
 
         if (!cancelled) {
@@ -104,28 +121,53 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
     };
   }, []);
 
-  // Filter programs by selected campus (allow campus id 0)
-  const programOptions = useMemo(() => {
-    const campusId = Number(data.campus_id_code);
-    const filtered = programRows.filter((r) => r.campus_id_code === campusId);
-
-    // Deduplicate by program_id_code
-    const seen = new Set();
-    const opts = [];
-    for (const r of filtered) {
-      if (!seen.has(r.program_id_code) && r.program_name) {
-        seen.add(r.program_id_code);
-        opts.push({ value: r.program_id_code, label: r.program_name });
-      }
-    }
-    return opts.sort((a, b) => a.label.localeCompare(b.label));
-  }, [programRows, data.campus_id_code]);
-
-  // Campus chosen check (0 is valid)
+  // Which campus selected? (0 is valid)
   const campusChosen =
     typeof data.campus_id_code !== "undefined" &&
     data.campus_id_code !== "" &&
     data.campus_id_code !== null;
+
+  // Level options available for chosen campus
+  const levelOptions = useMemo(() => {
+    if (!campusChosen) return [];
+    const campusId = Number(data.campus_id_code);
+    const levels = new Set(
+      programRows
+        .filter((r) => r.campus_id_code === campusId)
+        .map((r) => r.level_code)
+    );
+    const opts = Array.from(levels)
+      .sort((a, b) => a - b)
+      .map((code) => ({ value: code, label: LEVEL_LABELS[code] || `Level ${code}` }));
+    return opts;
+  }, [programRows, data.campus_id_code, campusChosen]);
+
+  const levelChosen =
+    typeof data.level !== "undefined" &&
+    data.level !== "" &&
+    data.level !== null;
+
+  // Program options filtered by campus + level; dedupe by core
+  const programOptions = useMemo(() => {
+    if (!campusChosen || !levelChosen) return [];
+    const campusId = Number(data.campus_id_code);
+    const levelCode = Number(data.level);
+
+    const rows = programRows.filter(
+      (r) => r.campus_id_code === campusId && r.level_code === levelCode
+    );
+
+    // Deduplicate by program_core_id (keep first)
+    const seenCore = new Set();
+    const opts = [];
+    for (const r of rows) {
+      if (!seenCore.has(r.program_core_id) && r.program_name) {
+        seenCore.add(r.program_core_id);
+        opts.push({ value: r.program_id_code, label: r.program_name });
+      }
+    }
+    return opts.sort((a, b) => a.label.localeCompare(b.label));
+  }, [programRows, campusChosen, levelChosen, data.campus_id_code, data.level]);
 
   if (loading) {
     return (
@@ -165,7 +207,8 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             onChange={(e) => {
               const campusVal = Number(e.target.value);
               onChange("campus_id_code", campusVal);
-              // Reset program when campus changes
+              // reset level & program when campus changes
+              onChange("level", "");
               onChange("program_id_code", "");
             }}
           >
@@ -182,7 +225,36 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           </TextField>
         </Grid>
 
-        {/* Program (filtered by campus) */}
+        {/* Level (derived from campus) */}
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            fullWidth
+            label="Academic Level"
+            required
+            {...req("level")}
+            onChange={(e) => {
+              const lvl = Number(e.target.value);
+              onChange("level", lvl);
+              // reset program when level changes
+              onChange("program_id_code", "");
+            }}
+            disabled={!campusChosen}
+          >
+            {levelOptions.map((o) => (
+              <MenuItem key={o.value} value={o.value}>
+                {o.label}
+              </MenuItem>
+            ))}
+            {levelOptions.length === 0 && (
+              <MenuItem disabled value="">
+                {campusChosen ? "No levels for selected campus" : "Select campus first"}
+              </MenuItem>
+            )}
+          </TextField>
+        </Grid>
+
+        {/* Program (filtered by campus + level) */}
         <Grid item xs={12} sm={6}>
           <TextField
             select
@@ -193,7 +265,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             onChange={(e) =>
               onChange("program_id_code", Number(e.target.value))
             }
-            disabled={!campusChosen}
+            disabled={!campusChosen || !levelChosen}
           >
             {programOptions.map((o) => (
               <MenuItem key={o.value} value={o.value}>
@@ -202,9 +274,11 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             ))}
             {programOptions.length === 0 && (
               <MenuItem disabled value="">
-                {campusChosen
-                  ? "No programs for selected campus"
-                  : "Select campus first"}
+                {!campusChosen
+                  ? "Select campus first"
+                  : !levelChosen
+                  ? "Select level first"
+                  : "No programs for selected campus & level"}
               </MenuItem>
             )}
           </TextField>
