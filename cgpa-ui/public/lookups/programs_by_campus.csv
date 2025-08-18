@@ -1,88 +1,87 @@
 campus_id_code,level_code,program_core_id,program_id_code,program_name
-1,0,258,497,Certificate In Business Administration
-1,0,192,304,Certificate In Child Development And Children's Ministry
-1,0,460,1172,Certificate in Administrative Law
-1,0,246,530,Certificate in Theology
 1,0,7,7,Diploma In Procurement And Logistics Management
 1,0,9,9,Diploma In Project Planning And Management
-1,0,245,501,Diploma In Public Administration And Management
+1,0,245,440,Diploma In Public Administration And Management
 1,0,194,309,Diploma In Theology
 1,0,195,311,Diploma In Theology (modular)
 1,0,2,2,Diploma in Business Administration
 1,0,212,357,Diploma in Child Development and Children's Ministry
 1,0,55,86,Diploma in Entrepreneurship and Information Technology
 1,0,210,351,Diploma in Guidance and Counselling
-1,0,384,931,Diploma in Information Technology
-1,0,407,967,Diploma in Journalism and Strategic Communication
+1,0,384,798,Diploma in Information Technology
+1,0,407,863,Diploma in Journalism and Strategic Communication
 1,0,419,881,Diploma in Law
 1,0,218,364,Diploma in Nursing
 1,0,78,142,Diploma in Social Work and Social Administration
 1,0,437,926,Diploma in Visual Art and Design
-1,0,356,672,Higher Education Certificate
-1,0,360,677,Higher Education Certificate (Arts)
-1,0,426,894,Higher Education Certificate (Arts)
-1,0,361,678,Higher Education Certificate (Biological Sciences)
-1,0,362,679,Higher Education Certificate (Physical Sciences)
+1,0,426,677,Higher Education Certificate (Arts)
 1,0,427,895,Higher Education Certificate (Sciences)
-1,0,443,945,Higher Education Certificate(Blended)
 1,1,75,132,Bachelor Of Arts With Education
-1,1,76,133,Bachelor Of Arts With Education
-1,1,96,171,Bachelor Of Arts With Education
-1,1,162,260,Bachelor Of Arts With Education
-1,1,167,261,Bachelor Of Arts With Education
-1,1,168,256,Bachelor Of Arts With Education
-1,1,169,248,Bachelor Of Arts With Education
-1,1,170,252,Bachelor Of Arts With Education
-1,1,172,251,Bachelor Of Arts With Education
-1,1,174,265,Bachelor Of Arts With Education
-1,1,178,269,Bachelor Of Arts With Education
-1,1,185,277,Bachelor Of Arts With Education
-1,1,389,805,Bachelor Of Arts With Education
-1,1,314,808,Bachelor Of Arts with Education
+1,1,76,132,Bachelor Of Arts With Education
+1,1,81,132,Bachelor Of Arts With Education
+1,1,96,132,Bachelor Of Arts With Education
+1,1,98,132,Bachelor Of Arts With Education
+1,1,102,132,Bachelor Of Arts With Education
+1,1,108,132,Bachelor Of Arts With Education
+1,1,161,132,Bachelor Of Arts With Education
+1,1,162,132,Bachelor Of Arts With Education
+1,1,163,132,Bachelor Of Arts With Education
+1,1,164,132,Bachelor Of Arts With Education
+1,1,166,132,Bachelor Of Arts With Education
+1,1,167,132,Bachelor Of Arts With Education
+1,1,168,132,Bachelor Of Arts With Education
+1,1,169,132,Bachelor Of Arts With Education
+1,1,170,132,Bachelor Of Arts With Education
+1,1,172,132,Bachelor Of Arts With Education
+1,1,173,132,Bachelor Of Arts With Education
+1,1,174,132,Bachelor Of Arts With Education
+1,1,178,132,Bachelor Of Arts With Education
+1,1,180,132,Bachelor Of Arts With Education
+1,1,181,132,Bachelor Of Arts With Education
+1,1,183,132,Bachelor Of Arts With Education
+1,1,185,132,Bachelor Of Arts With Education
+1,1,314,132,Bachelor Of Arts With Education
+1,1,389,132,Bachelor Of Arts With Education
 1,1,74,131,Bachelor Of Education
-1,1,226,667,Bachelor Of Education
-1,1,230,461,Bachelor Of Education
-1,1,233,622,Bachelor Of Education
-1,1,234,888,Bachelor Of Education
-1,1,248,467,Bachelor Of Education
-1,1,325,560,Bachelor Of Education
-1,1,336,777,Bachelor Of Education
-1,1,353,668,Bachelor Of Education
-1,1,354,669,Bachelor Of Education
+1,1,213,131,Bachelor Of Education
+1,1,216,131,Bachelor Of Education
+1,1,226,131,Bachelor Of Education
+1,1,230,131,Bachelor Of Education
+1,1,233,131,Bachelor Of Education
+1,1,234,131,Bachelor Of Education
+1,1,248,131,Bachelor Of Education
+1,1,325,131,Bachelor Of Education
+1,1,336,131,Bachelor Of Education
+1,1,353,131,Bachelor Of Education
+1,1,354,131,Bachelor Of Education
 1,1,323,561,Bachelor Of Education (GEOG/CRE)
 1,1,250,471,Bachelor Of Education (Primary)(CRE/SST)
-1,1,204,891,Bachelor Of Education (Secondary)(Agriculture Double Main)
+1,1,204,345,Bachelor Of Education (Secondary)(Agriculture Double Main)
 1,1,247,465,Bachelor Of Education (Secondary)(Art - Double Main)
-1,1,368,765,Bachelor Of Education (Secondary)(Art DM)
+1,1,368,763,Bachelor Of Education (Secondary)(Art DM)
 1,1,249,470,Bachelor Of Education (Secondary)(CRE/English)
 1,1,423,892,Bachelor Of Education (Secondary)(Chemistry/Computer)
 1,1,352,666,Bachelor Of Education (Secondary)(Economics/Geography)
-1,1,220,469,Bachelor Of Education (Secondary)(Geography/Math)
+1,1,220,365,Bachelor Of Education (Secondary)(Geography/Math)
 1,1,425,893,Bachelor Of Education (Secondary)(History/Luganda)
-1,1,422,889,Bachelor Of Education (Secondary)(Math/Computer)
+1,1,422,886,Bachelor Of Education (Secondary)(Math/Computer)
 1,1,176,267,Bachelor Of Education (Secondary)(Mathematics/Physics)
 1,1,72,125,Bachelor Of Education 2
 1,1,59,89,Bachelor Of Science In Agricultural Education Andextension
 1,1,175,268,Bachelor Of Science With Education
+1,1,177,268,Bachelor Of Science With Education
+1,1,251,268,Bachelor Of Science With Education
+1,1,322,268,Bachelor Of Science With Education
+1,1,330,268,Bachelor Of Science With Education
+1,1,331,268,Bachelor Of Science With Education
+1,1,332,268,Bachelor Of Science With Education
 1,1,73,130,Bachelor Of Sciences With Education (computer Education)
 1,1,104,182,Bachelor Of With Education(kiswahili)
 1,1,355,670,Bachelor of Administrative and Secretarial Studies
 1,1,39,72,Bachelor of Agricultural Science and Entrepreneurship
-1,1,102,176,Bachelor of Arts With Education
-1,1,108,186,Bachelor of Arts With Education
-1,1,161,259,Bachelor of Arts With Education
 1,1,441,930,Bachelor of Arts in Journalism and Mass Communication
 1,1,82,148,Bachelor of Arts in Languages
 1,1,46,80,Bachelor of Arts in Mass Communication
-1,1,81,147,Bachelor of Arts with Education
-1,1,98,173,Bachelor of Arts with Education
-1,1,163,258,Bachelor of Arts with Education
-1,1,164,264,Bachelor of Arts with Education
-1,1,166,257,Bachelor of Arts with Education
-1,1,173,255,Bachelor of Arts with Education
-1,1,180,271,Bachelor of Arts with Education
-1,1,181,272,Bachelor of Arts with Education
-1,1,183,275,Bachelor of Arts with Education
 1,1,171,253,Bachelor of Arts with Education (CRE/Luganda)
 1,1,391,810,Bachelor of Arts with Education (Economics/Entrepreneurship)
 1,1,390,809,Bachelor of Arts with Education (English/Geography)
@@ -101,13 +100,11 @@ campus_id_code,level_code,program_core_id,program_id_code,program_name
 1,1,80,146,Bachelor of Divinity
 1,1,116,197,Bachelor of Divinity (Modular)
 1,1,12,11,Bachelor of Economics and Management
-1,1,213,890,Bachelor of Education
-1,1,216,472,Bachelor of Education
+1,1,86,907,Bachelor of Education (PRIMARY)
 1,1,428,907,Bachelor of Education (PRIMARY)
+1,1,264,908,Bachelor of Education (SECONDARY)
 1,1,429,908,Bachelor of Education (SECONDARY)
-1,1,337,909,Bachelor of Education (Secondary)(Biology/Sports Science)
-1,1,86,153,Bachelor of Education (primary)
-1,1,264,741,Bachelor of Education (secondary)
+1,1,337,587,Bachelor of Education (Secondary)(Biology/Sports Science)
 1,1,324,559,Bachelor of Education(Primary)(English/SST)
 1,1,47,81,Bachelor of Entrepreneurship and Project Planning
 1,1,51,85,Bachelor of Environmental Science
@@ -117,7 +114,7 @@ campus_id_code,level_code,program_core_id,program_id_code,program_name
 1,1,274,552,Bachelor of Guidance and Counselling
 1,1,22,17,Bachelor of Health Administration
 1,1,87,154,Bachelor of Holistic Child Development
-1,1,24,946,Bachelor of Human Nutrition and Clinical Dietetics
+1,1,24,102,Bachelor of Human Nutrition and Clinical Dietetics
 1,1,10,23,Bachelor of Human Resource Management
 1,1,64,98,"Bachelor of Human Rights, Peace and Humanitarian Interventions"
 1,1,85,152,Bachelor of Industrial and Fine Art
@@ -133,7 +130,6 @@ campus_id_code,level_code,program_core_id,program_id_code,program_name
 1,1,30,42,Bachelor of Project Planning and Management
 1,1,48,82,Bachelor of Public Administration and Management
 1,1,71,124,Bachelor of Public Health
-1,1,177,266,Bachelor of Science With Education
 1,1,3,3,Bachelor of Science in Accounting and Finance
 1,1,60,91,Bachelor of Science in Agribusiness
 1,1,43,77,Bachelor of Science in Civil and Environmental Engineering
@@ -145,11 +141,6 @@ campus_id_code,level_code,program_core_id,program_id_code,program_name
 1,1,57,88,Bachelor of Science in Electronics and Communication Science
 1,1,40,73,Bachelor of Science in Food Science and Technology
 1,1,38,71,Bachelor of Science in Information Technology
-1,1,251,473,Bachelor of Science with Education
-1,1,322,555,Bachelor of Science with Education
-1,1,330,568,Bachelor of Science with Education
-1,1,331,569,Bachelor of Science with Education
-1,1,332,570,Bachelor of Science with Education
 1,1,454,988,Bachelor of Science with Education (AIO)
 1,1,333,571,Bachelor of Science with Education (Physics/Chemistry)
 1,1,357,738,Bachelor of Science with Education (mtc/Geography)
@@ -182,30 +173,30 @@ campus_id_code,level_code,program_core_id,program_id_code,program_name
 1,2,106,184,Master of Development Monitoring and Evaluation
 1,2,105,183,Master of Development Studies
 1,2,111,189,Master of Divinity
-1,2,202,333,Master of Divinity
+1,2,202,189,Master of Divinity
 1,2,415,876,Master of Education Administration and Management
 1,2,184,276,Master of Education in Administration and Planning
-1,2,262,521,Master of Education in Administration and Planning
+1,2,262,276,Master of Education in Administration and Planning
 1,2,433,920,Master of Education in Curriculum Studies
 1,2,434,921,Master of Educational Psychology
 1,2,440,929,Master of Governance and International Relations
 1,2,435,922,Master of Higher Education Pedagogy and Leadership
-1,2,393,947,Master of Human Resource Management
+1,2,393,815,Master of Human Resource Management
 1,2,182,274,Master of Human Resource Management in Education
 1,2,58,139,Master of Information Technology
 1,2,459,1163,Master of International Business Law
-1,2,66,1162,Master of Laws in International Business Law
-1,2,240,923,Master of Laws in International Business Law
+1,2,66,406,Master of Laws in International Business Law
+1,2,240,406,Master of Laws in International Business Law
 1,2,67,289,Master of Laws in International Energy Law and Policy
-1,2,188,924,Master of Laws in Oil and Gas
+1,2,188,290,Master of Laws in Oil and Gas
 1,2,189,291,Master of Library and Information Studies
 1,2,436,925,Master of Midwifery and Women’s Health Science
 1,2,26,21,Master of Nursing Science
 1,2,110,188,Master of Public Administration and Management
 1,2,29,330,Master of Public Health
-1,2,455,995,Master of Public Health
+1,2,455,330,Master of Public Health
 1,2,27,19,Master of Public Health Leadership
-1,2,383,797,Master of Public Health Leadership
+1,2,383,19,Master of Public Health Leadership
 1,2,191,293,Master of Public Health Leadership (international)
 1,2,91,165,Master of Research and Public Policy
 1,2,101,175,Master of Science in Agribusiness Management and Entrepreneurship
@@ -218,7 +209,7 @@ campus_id_code,level_code,program_core_id,program_id_code,program_name
 1,2,52,90,Master of Science in Environmental Science by Research
 1,2,28,22,Master of Science in Human Nutrition
 1,2,120,205,Master of Science in Procurement and Supply Chain Management
-1,2,122,207,Master of Science in Procurement and Supply Chain Management
+1,2,122,205,Master of Science in Procurement and Supply Chain Management
 1,2,103,177,Master of Science in Water and Sanitation
 1,2,65,208,Master of Social Work
 1,2,444,948,Master of Theological Studies
@@ -235,273 +226,272 @@ campus_id_code,level_code,program_core_id,program_id_code,program_name
 1,4,405,834,"Python Programming (UGX 300,000)"
 1,5,200,331,PostGraduate Diploma In Christian Ministries
 1,5,303,664,Postgraduate Diploma In Higher Education
-1,5,117,960,Postgraduate Diploma In Human Resource Management
+1,5,117,200,Postgraduate Diploma In Human Resource Management
 1,5,235,187,Postgraduate Diploma In Public Administration And Management
 1,5,442,941,Postgraduate Diploma in Computer Science
 1,5,432,919,Postgraduate Diploma in Data Science and Analytics
-1,5,237,432,Postgraduate Diploma in Development Monitoring and Evaluation
+1,5,237,402,Postgraduate Diploma in Development Monitoring and Evaluation
 1,5,211,353,Postgraduate Diploma in Education
 1,5,392,812,Postgraduate Diploma in Sustainable Business and Renewable Energy
 1,5,54,294,Postgraduate Diploma in Water and Sanitation
 1,6,186,283,University Bridging Year
-2,0,7,34,Diploma In Procurement And Logistics Management
-2,0,9,38,Diploma In Project Planning And Management
-2,0,2,29,Diploma in Business Administration
-2,0,384,932,Diploma in Information Technology
-2,0,419,882,Diploma in Law
-2,0,78,280,Diploma in Social Work and Social Administration
-2,1,1,24,Bachelor of Business Administration
+2,0,7,7,Diploma In Procurement And Logistics Management
+2,0,9,9,Diploma In Project Planning And Management
+2,0,2,2,Diploma in Business Administration
+2,0,384,798,Diploma in Information Technology
+2,0,419,881,Diploma in Law
+2,0,78,142,Diploma in Social Work and Social Administration
+2,1,1,1,Bachelor of Business Administration
 2,1,20,168,Bachelor of Dental Surgery
-2,1,12,40,Bachelor of Economics and Management
-2,1,10,39,Bachelor of Human Resource Management
-2,1,5,32,Bachelor of International Business
-2,1,45,156,Bachelor of Laws
+2,1,12,11,Bachelor of Economics and Management
+2,1,10,23,Bachelor of Human Resource Management
+2,1,5,5,Bachelor of International Business
+2,1,45,79,Bachelor of Laws
 2,1,19,144,Bachelor of Medicine and Bachelor Of Surgery
-2,1,6,33,Bachelor of Procurement and Logistics Management
-2,1,8,37,Bachelor of Project Planning and Entreprenuership
-2,1,30,43,Bachelor of Project Planning and Management
-2,1,48,278,Bachelor of Public Administration and Management
-2,1,3,30,Bachelor of Science in Accounting and Finance
-2,1,13,41,Bachelor of Science in Economics And Statistics
-2,1,38,285,Bachelor of Science in Information Technology
-2,1,270,583,Bachelor of Science in Oil and Gas Management
-2,1,77,212,Bachelor of Social Work and Social Administration
-2,2,118,198,Master of Arts in Journalism and Media Studies
-2,2,50,875,Master of Arts in Strategic Communication
-2,2,123,279,Master of Business Administration
-2,2,17,407,Master of Business Administration in Oil and Gas Management
+2,1,6,6,Bachelor of Procurement and Logistics Management
+2,1,8,8,Bachelor of Project Planning and Entreprenuership
+2,1,30,42,Bachelor of Project Planning and Management
+2,1,48,82,Bachelor of Public Administration and Management
+2,1,3,3,Bachelor of Science in Accounting and Finance
+2,1,13,12,Bachelor of Science in Economics And Statistics
+2,1,38,71,Bachelor of Science in Information Technology
+2,1,270,525,Bachelor of Science in Oil and Gas Management
+2,1,77,141,Bachelor of Social Work and Social Administration
+2,2,118,96,Master of Arts in Journalism and Media Studies
+2,2,50,84,Master of Arts in Strategic Communication
+2,2,123,209,Master of Business Administration
+2,2,17,203,Master of Business Administration in Oil and Gas Management
 2,2,393,815,Master of Human Resource Management
-2,2,58,284,Master of Information Technology
+2,2,58,139,Master of Information Technology
 2,2,240,406,Master of Laws in International Business Law
-2,2,67,405,Master of Laws in International Energy Law and Policy
+2,2,67,289,Master of Laws in International Energy Law and Policy
 2,2,188,290,Master of Laws in Oil and Gas
-2,2,29,747,Master of Public Health
-2,2,455,996,Master of Public Health
-2,2,91,288,Master of Research and Public Policy
-2,2,400,933,Master of Science in Computer Science
-2,2,402,943,Master of Science in Data Science and Analytics
-2,2,122,585,Master of Science in Procurement and Supply Chain Management
-2,2,65,286,Master of Social Work
+2,2,29,330,Master of Public Health
+2,2,455,330,Master of Public Health
+2,2,91,165,Master of Research and Public Policy
+2,2,400,828,Master of Science in Computer Science
+2,2,402,830,Master of Science in Data Science and Analytics
+2,2,122,205,Master of Science in Procurement and Supply Chain Management
+2,2,65,208,Master of Social Work
 2,5,117,200,Postgraduate Diploma In Human Resource Management
-2,5,235,502,Postgraduate Diploma In Public Administration And Management
-2,5,442,942,Postgraduate Diploma in Computer Science
-2,5,432,944,Postgraduate Diploma in Data Science and Analytics
-3,0,192,463,Certificate In Child Development And Children's Ministry
-3,0,246,464,Certificate in Theology
-3,0,9,518,Diploma In Project Planning And Management
+2,5,235,187,Postgraduate Diploma In Public Administration And Management
+2,5,442,941,Postgraduate Diploma in Computer Science
+2,5,432,919,Postgraduate Diploma in Data Science and Analytics
+3,0,9,9,Diploma In Project Planning And Management
 3,0,245,440,Diploma In Public Administration And Management
-3,0,195,462,Diploma In Theology (modular)
-3,0,2,517,Diploma in Business Administration
-3,0,212,458,Diploma in Child Development and Children's Ministry
+3,0,236,309,Diploma In Theology
+3,0,195,311,Diploma In Theology (modular)
+3,0,2,2,Diploma in Business Administration
+3,0,212,357,Diploma in Child Development and Children's Ministry
 3,0,346,637,Diploma in Education
-3,0,347,644,Diploma in Education
+3,0,347,637,Diploma in Education
 3,0,349,650,Diploma in Education (Primary)
 3,0,263,507,Diploma in Education (Primary)(Math/Sports Science)
-3,0,55,445,Diploma in Entrepreneurship and Information Technology
+3,0,55,86,Diploma in Entrepreneurship and Information Technology
 3,0,384,798,Diploma in Information Technology
-3,0,78,447,Diploma in Social Work and Social Administration
-3,0,236,459,Diploma in Theology
-3,0,360,1035,Higher Education Certificate (Arts)
-3,0,426,981,Higher Education Certificate (Arts)
-3,0,361,1038,Higher Education Certificate (Biological Sciences)
-3,0,362,1037,Higher Education Certificate (Physical Sciences)
-3,0,427,1034,Higher Education Certificate (Sciences)
-3,1,162,414,Bachelor Of Arts With Education
-3,1,167,424,Bachelor Of Arts With Education
-3,1,168,410,Bachelor Of Arts With Education
-3,1,169,409,Bachelor Of Arts With Education
-3,1,170,417,Bachelor Of Arts With Education
-3,1,172,418,Bachelor Of Arts With Education
-3,1,174,420,Bachelor Of Arts With Education
-3,1,242,429,Bachelor Of Arts With Education
-3,1,243,430,Bachelor Of Arts With Education
+3,0,78,142,Diploma in Social Work and Social Administration
+3,0,426,677,Higher Education Certificate (Arts)
+3,0,427,895,Higher Education Certificate (Sciences)
+3,1,81,132,Bachelor Of Arts With Education
+3,1,161,132,Bachelor Of Arts With Education
+3,1,162,132,Bachelor Of Arts With Education
+3,1,163,132,Bachelor Of Arts With Education
+3,1,164,132,Bachelor Of Arts With Education
+3,1,167,132,Bachelor Of Arts With Education
+3,1,168,132,Bachelor Of Arts With Education
+3,1,169,132,Bachelor Of Arts With Education
+3,1,170,132,Bachelor Of Arts With Education
+3,1,172,132,Bachelor Of Arts With Education
+3,1,173,132,Bachelor Of Arts With Education
+3,1,174,132,Bachelor Of Arts With Education
+3,1,242,132,Bachelor Of Arts With Education
+3,1,243,132,Bachelor Of Arts With Education
+3,1,373,132,Bachelor Of Arts With Education
+3,1,374,132,Bachelor Of Arts With Education
+3,1,375,132,Bachelor Of Arts With Education
+3,1,377,132,Bachelor Of Arts With Education
+3,1,378,132,Bachelor Of Arts With Education
+3,1,379,132,Bachelor Of Arts With Education
 3,1,241,416,Bachelor Of Arts With Education X
-3,1,230,636,Bachelor Of Education
-3,1,233,621,Bachelor Of Education
-3,1,248,627,Bachelor Of Education
-3,1,325,628,Bachelor Of Education
-3,1,229,631,Bachelor Of Education (English/Literature)
-3,1,323,625,Bachelor Of Education (GEOG/CRE)
-3,1,227,425,Bachelor Of Education (Geography/CRE)
+3,1,216,131,Bachelor Of Education
+3,1,230,131,Bachelor Of Education
+3,1,233,131,Bachelor Of Education
+3,1,248,131,Bachelor Of Education
+3,1,325,131,Bachelor Of Education
+3,1,350,131,Bachelor Of Education
+3,1,351,131,Bachelor Of Education
+3,1,229,375,Bachelor Of Education (English/Literature)
+3,1,323,561,Bachelor Of Education (GEOG/CRE)
+3,1,227,373,Bachelor Of Education (Geography/CRE)
 3,1,214,427,Bachelor Of Education (MATH/GEOG)
-3,1,364,752,Bachelor Of Education (MATH/GEOG)
-3,1,247,762,Bachelor Of Education (Secondary)(Art - Double Main)
+3,1,364,427,Bachelor Of Education (MATH/GEOG)
+3,1,247,465,Bachelor Of Education (Secondary)(Art - Double Main)
 3,1,368,763,Bachelor Of Education (Secondary)(Art DM)
-3,1,220,428,Bachelor Of Education (Secondary)(Geography/Math)
-3,1,176,423,Bachelor Of Education (Secondary)(Mathematics/Physics)
-3,1,175,422,Bachelor Of Science With Education
-3,1,244,431,Bachelor Of Science With Education
-3,1,344,775,Bachelor Of Science With Education
-3,1,161,408,Bachelor of Arts With Education
-3,1,81,475,Bachelor of Arts with Education
-3,1,163,411,Bachelor of Arts with Education
-3,1,164,413,Bachelor of Arts with Education
-3,1,173,415,Bachelor of Arts with Education
-3,1,373,788,Bachelor of Arts with Education
-3,1,374,783,Bachelor of Arts with Education
-3,1,375,784,Bachelor of Arts with Education
-3,1,377,786,Bachelor of Arts with Education
-3,1,378,789,Bachelor of Arts with Education
-3,1,379,787,Bachelor of Arts with Education
+3,1,220,365,Bachelor Of Education (Secondary)(Geography/Math)
+3,1,176,267,Bachelor Of Education (Secondary)(Mathematics/Physics)
+3,1,175,268,Bachelor Of Science With Education
+3,1,177,268,Bachelor Of Science With Education
+3,1,244,268,Bachelor Of Science With Education
+3,1,251,268,Bachelor Of Science With Education
+3,1,330,268,Bachelor Of Science With Education
+3,1,331,268,Bachelor Of Science With Education
+3,1,332,268,Bachelor Of Science With Education
+3,1,344,268,Bachelor Of Science With Education
 3,1,418,879,Bachelor of Arts with Education (ENT/MATH)
 3,1,376,785,Bachelor of Arts with Education (History/Computer)
-3,1,453,984,Bachelor of Arts with Education(AIO)
-3,1,1,513,Bachelor of Business Administration
-3,1,69,433,Bachelor of Development Studies
-3,1,68,553,Bachelor of Development and Social Entrepreneurship
-3,1,12,515,Bachelor of Economics and Management
-3,1,216,426,Bachelor of Education
-3,1,350,652,Bachelor of Education
-3,1,351,653,Bachelor of Education
-3,1,428,910,Bachelor of Education (PRIMARY)
-3,1,429,911,Bachelor of Education (SECONDARY)
-3,1,47,466,Bachelor of Entrepreneurship and Project Planning
-3,1,49,434,Bachelor of Governance and International Relations
-3,1,10,468,Bachelor of Human Resource Management
-3,1,6,512,Bachelor of Procurement and Logistics Management
-3,1,48,438,Bachelor of Public Administration and Management
-3,1,177,421,Bachelor of Science With Education
-3,1,38,443,Bachelor of Science in Information Technology
-3,1,251,476,Bachelor of Science with Education
-3,1,330,596,Bachelor of Science with Education
-3,1,331,595,Bachelor of Science with Education
-3,1,332,597,Bachelor of Science with Education
-3,1,454,989,Bachelor of Science with Education (AIO)
-3,1,357,771,Bachelor of Science with Education (mtc/Geography)
-3,1,451,980,Bachelor of Social Work
-3,1,77,435,Bachelor of Social Work and Social Administration
+3,1,453,983,Bachelor of Arts with Education(AIO)
+3,1,1,1,Bachelor of Business Administration
+3,1,69,100,Bachelor of Development Studies
+3,1,68,99,Bachelor of Development and Social Entrepreneurship
+3,1,12,11,Bachelor of Economics and Management
+3,1,428,907,Bachelor of Education (PRIMARY)
+3,1,429,908,Bachelor of Education (SECONDARY)
+3,1,47,81,Bachelor of Entrepreneurship and Project Planning
+3,1,49,83,Bachelor of Governance and International Relations
+3,1,10,23,Bachelor of Human Resource Management
+3,1,6,6,Bachelor of Procurement and Logistics Management
+3,1,48,82,Bachelor of Public Administration and Management
+3,1,38,71,Bachelor of Science in Information Technology
+3,1,454,988,Bachelor of Science with Education (AIO)
+3,1,357,738,Bachelor of Science with Education (mtc/Geography)
+3,1,451,979,Bachelor of Social Work
+3,1,77,141,Bachelor of Social Work and Social Administration
 3,1,265,511,Kkkk
-3,2,16,671,Executive Master of Business Administration
-3,2,123,477,Master of Business Administration
-3,2,105,456,Master of Development Studies
-3,2,415,878,Master of Education Administration and Management
-3,2,262,506,Master of Education in Administration and Planning
-3,2,58,450,Master of Information Technology
-3,2,110,453,Master of Public Administration and Management
-3,2,400,939,Master of Science in Computer Science
-3,5,235,457,Postgraduate Diploma In Public Administration And Management
-4,0,258,698,Certificate In Business Administration
-4,0,259,697,Certificate In Information Technology
-4,0,246,887,Certificate in Theology
-4,0,7,593,Diploma In Procurement And Logistics Management
-4,0,245,580,Diploma In Public Administration And Management
-4,0,2,592,Diploma in Business Administration
-4,0,347,870,Diploma in Education
-4,0,394,871,Diploma in Education
-4,0,412,872,Diploma in Education
+3,2,16,202,Executive Master of Business Administration
+3,2,123,209,Master of Business Administration
+3,2,105,183,Master of Development Studies
+3,2,415,876,Master of Education Administration and Management
+3,2,262,276,Master of Education in Administration and Planning
+3,2,58,139,Master of Information Technology
+3,2,110,188,Master of Public Administration and Management
+3,2,400,828,Master of Science in Computer Science
+3,5,235,187,Postgraduate Diploma In Public Administration And Management
+4,0,7,7,Diploma In Procurement And Logistics Management
+4,0,245,440,Diploma In Public Administration And Management
+4,0,236,309,Diploma In Theology
+4,0,2,2,Diploma in Business Administration
+4,0,347,637,Diploma in Education
+4,0,394,637,Diploma in Education
+4,0,412,637,Diploma in Education
 4,0,413,873,Diploma in Education (Primary)(English/Art)
-4,0,55,582,Diploma in Entrepreneurship and Information Technology
-4,0,384,811,Diploma in Information Technology
-4,0,78,581,Diploma in Social Work and Social Administration
-4,0,236,594,Diploma in Theology
-4,0,426,1040,Higher Education Certificate (Arts)
-4,0,427,1041,Higher Education Certificate (Sciences)
-4,1,162,719,Bachelor Of Arts With Education
-4,1,167,718,Bachelor Of Arts With Education
-4,1,168,901,Bachelor Of Arts With Education
-4,1,169,745,Bachelor Of Arts With Education
-4,1,172,746,Bachelor Of Arts With Education
-4,1,174,856,Bachelor Of Arts With Education
-4,1,185,732,Bachelor Of Arts With Education
-4,1,243,896,Bachelor Of Arts With Education
-4,1,316,778,Bachelor Of Arts With Education
-4,1,389,855,Bachelor Of Arts With Education
-4,1,74,835,Bachelor Of Education
-4,1,217,851,Bachelor Of Education
-4,1,222,861,Bachelor Of Education
-4,1,226,845,Bachelor Of Education
-4,1,230,842,Bachelor Of Education
-4,1,231,836,Bachelor Of Education
-4,1,234,847,Bachelor Of Education
-4,1,329,860,Bachelor Of Education
-4,1,336,850,Bachelor Of Education
-4,1,348,864,Bachelor Of Education
-4,1,353,846,Bachelor Of Education
-4,1,354,838,Bachelor Of Education
-4,1,398,841,Bachelor Of Education
-4,1,409,868,Bachelor Of Education
-4,1,227,865,Bachelor Of Education (Geography/CRE)
+4,0,55,86,Diploma in Entrepreneurship and Information Technology
+4,0,384,798,Diploma in Information Technology
+4,0,78,142,Diploma in Social Work and Social Administration
+4,0,426,677,Higher Education Certificate (Arts)
+4,0,427,895,Higher Education Certificate (Sciences)
+4,1,102,132,Bachelor Of Arts With Education
+4,1,162,132,Bachelor Of Arts With Education
+4,1,163,132,Bachelor Of Arts With Education
+4,1,164,132,Bachelor Of Arts With Education
+4,1,167,132,Bachelor Of Arts With Education
+4,1,168,132,Bachelor Of Arts With Education
+4,1,169,132,Bachelor Of Arts With Education
+4,1,172,132,Bachelor Of Arts With Education
+4,1,174,132,Bachelor Of Arts With Education
+4,1,185,132,Bachelor Of Arts With Education
+4,1,243,132,Bachelor Of Arts With Education
+4,1,316,132,Bachelor Of Arts With Education
+4,1,389,132,Bachelor Of Arts With Education
+4,1,74,131,Bachelor Of Education
+4,1,213,131,Bachelor Of Education
+4,1,216,131,Bachelor Of Education
+4,1,217,131,Bachelor Of Education
+4,1,221,131,Bachelor Of Education
+4,1,222,131,Bachelor Of Education
+4,1,226,131,Bachelor Of Education
+4,1,230,131,Bachelor Of Education
+4,1,231,131,Bachelor Of Education
+4,1,234,131,Bachelor Of Education
+4,1,329,131,Bachelor Of Education
+4,1,336,131,Bachelor Of Education
+4,1,348,131,Bachelor Of Education
+4,1,353,131,Bachelor Of Education
+4,1,354,131,Bachelor Of Education
+4,1,398,131,Bachelor Of Education
+4,1,409,131,Bachelor Of Education
+4,1,227,373,Bachelor Of Education (Geography/CRE)
 4,1,449,977,Bachelor Of Education (Secondary)(Agriculture/ICT)
-4,1,368,849,Bachelor Of Education (Secondary)(Art DM)
-4,1,249,839,Bachelor Of Education (Secondary)(CRE/English)
+4,1,368,763,Bachelor Of Education (Secondary)(Art DM)
+4,1,249,470,Bachelor Of Education (Secondary)(CRE/English)
 4,1,410,869,Bachelor Of Education (Secondary)(Geography/Entrepreneurship)
-4,1,220,852,Bachelor Of Education (Secondary)(Geography/Math)
-4,1,422,976,Bachelor Of Education (Secondary)(Math/Computer)
+4,1,220,365,Bachelor Of Education (Secondary)(Geography/Math)
+4,1,422,886,Bachelor Of Education (Secondary)(Math/Computer)
 4,1,408,867,Bachelor Of Education(Agriculture/Biology)
 4,1,447,974,Bachelor Of Education(Math/PE)
-4,1,102,696,Bachelor of Arts With Education
-4,1,163,744,Bachelor of Arts with Education
-4,1,164,717,Bachelor of Arts with Education
-4,1,453,985,Bachelor of Arts with Education(AIO)
-4,1,1,589,Bachelor of Business Administration
-4,1,69,576,Bachelor of Development Studies
-4,1,68,578,Bachelor of Development and Social Entrepreneurship
-4,1,213,862,Bachelor of Education
-4,1,216,857,Bachelor of Education
-4,1,221,866,Bachelor of Education
-4,1,428,914,Bachelor of Education (PRIMARY)
-4,1,429,915,Bachelor of Education (SECONDARY)
+4,1,453,983,Bachelor of Arts with Education(AIO)
+4,1,1,1,Bachelor of Business Administration
+4,1,69,100,Bachelor of Development Studies
+4,1,68,99,Bachelor of Development and Social Entrepreneurship
+4,1,428,907,Bachelor of Education (PRIMARY)
+4,1,429,908,Bachelor of Education (SECONDARY)
 4,1,450,978,Bachelor of Education (Secondary)(Biology/PE)
-4,1,395,848,Bachelor of Education (Secondary)(Geog/ICT)
+4,1,395,821,Bachelor of Education (Secondary)(Geog/ICT)
 4,1,448,975,Bachelor of Education(English/Music)
-4,1,93,591,Bachelor of Information and Administrative Management
-4,1,6,695,Bachelor of Procurement and Logistics Management
-4,1,48,579,Bachelor of Public Administration and Management
-4,1,38,814,Bachelor of Science in Information Technology
-4,1,454,990,Bachelor of Science with Education (AIO)
-4,1,77,575,Bachelor of Social Work and Social Administration
-4,5,211,590,Postgraduate Diploma in Education
-5,0,192,395,Certificate In Child Development And Children's Ministry
-5,0,259,498,Certificate In Information Technology
-5,0,260,500,Certificate In Journalism And Media Studies
-5,0,246,499,Certificate in Theology
-5,0,9,495,Diploma In Project Planning And Management
-5,0,194,391,Diploma In Theology
-5,0,2,393,Diploma in Business Administration
-5,0,347,817,Diploma in Education
-5,0,394,820,Diploma in Education
-5,0,349,806,Diploma in Education (Primary)
-5,0,263,807,Diploma in Education (Primary)(Math/Sports Science)
-5,0,55,394,Diploma in Entrepreneurship and Information Technology
+4,1,93,167,Bachelor of Information and Administrative Management
+4,1,6,6,Bachelor of Procurement and Logistics Management
+4,1,48,82,Bachelor of Public Administration and Management
+4,1,38,71,Bachelor of Science in Information Technology
+4,1,454,988,Bachelor of Science with Education (AIO)
+4,1,77,141,Bachelor of Social Work and Social Administration
+4,5,211,353,Postgraduate Diploma in Education
+5,0,9,9,Diploma In Project Planning And Management
+5,0,194,309,Diploma In Theology
+5,0,236,309,Diploma In Theology
+5,0,2,2,Diploma in Business Administration
+5,0,347,637,Diploma in Education
+5,0,394,637,Diploma in Education
+5,0,349,650,Diploma in Education (Primary)
+5,0,263,507,Diploma in Education (Primary)(Math/Sports Science)
+5,0,55,86,Diploma in Entrepreneurship and Information Technology
 5,0,257,496,Diploma in Environmental Studies
-5,0,384,993,Diploma in Information Technology
+5,0,384,798,Diploma in Information Technology
 5,0,238,403,Diploma in Journalism and Mass Communication
 5,0,407,863,Diploma in Journalism and Strategic Communication
-5,0,78,392,Diploma in Social Work and Social Administration
-5,0,236,401,Diploma in Theology
+5,0,78,142,Diploma in Social Work and Social Administration
 5,0,309,529,Diploma of Environmental Science and Disaster Management
-5,0,360,1166,Higher Education Certificate (Arts)
-5,0,426,973,Higher Education Certificate (Arts)
-5,0,362,1138,Higher Education Certificate (Physical Sciences)
-5,1,169,598,Bachelor Of Arts With Education
-5,1,172,615,Bachelor Of Arts With Education
-5,1,178,600,Bachelor Of Arts With Education
-5,1,185,607,Bachelor Of Arts With Education
-5,1,242,599,Bachelor Of Arts With Education
-5,1,243,610,Bachelor Of Arts With Education
-5,1,310,538,Bachelor Of Arts With Education
-5,1,313,541,Bachelor Of Arts With Education
-5,1,316,544,Bachelor Of Arts With Education
-5,1,320,548,Bachelor Of Arts With Education
-5,1,339,602,Bachelor Of Arts With Education
-5,1,340,603,Bachelor Of Arts With Education
-5,1,343,618,Bachelor Of Arts With Education
-5,1,369,766,Bachelor Of Arts With Education
-5,1,314,542,Bachelor Of Arts with Education
-5,1,74,344,Bachelor Of Education
-5,1,217,363,Bachelor Of Education
-5,1,222,368,Bachelor Of Education
-5,1,226,372,Bachelor Of Education
-5,1,230,376,Bachelor Of Education
-5,1,231,377,Bachelor Of Education
-5,1,232,379,Bachelor Of Education
-5,1,233,378,Bachelor Of Education
-5,1,234,381,Bachelor Of Education
-5,1,329,566,Bachelor Of Education
-5,1,336,586,Bachelor Of Education
-5,1,348,813,Bachelor Of Education
+5,0,426,677,Higher Education Certificate (Arts)
+5,1,108,132,Bachelor Of Arts With Education
+5,1,163,132,Bachelor Of Arts With Education
+5,1,164,132,Bachelor Of Arts With Education
+5,1,169,132,Bachelor Of Arts With Education
+5,1,172,132,Bachelor Of Arts With Education
+5,1,173,132,Bachelor Of Arts With Education
+5,1,178,132,Bachelor Of Arts With Education
+5,1,185,132,Bachelor Of Arts With Education
+5,1,242,132,Bachelor Of Arts With Education
+5,1,243,132,Bachelor Of Arts With Education
+5,1,310,132,Bachelor Of Arts With Education
+5,1,312,132,Bachelor Of Arts With Education
+5,1,313,132,Bachelor Of Arts With Education
+5,1,314,132,Bachelor Of Arts With Education
+5,1,315,132,Bachelor Of Arts With Education
+5,1,316,132,Bachelor Of Arts With Education
+5,1,319,132,Bachelor Of Arts With Education
+5,1,320,132,Bachelor Of Arts With Education
+5,1,339,132,Bachelor Of Arts With Education
+5,1,340,132,Bachelor Of Arts With Education
+5,1,341,132,Bachelor Of Arts With Education
+5,1,343,132,Bachelor Of Arts With Education
+5,1,345,132,Bachelor Of Arts With Education
+5,1,369,132,Bachelor Of Arts With Education
+5,1,74,131,Bachelor Of Education
+5,1,213,131,Bachelor Of Education
+5,1,216,131,Bachelor Of Education
+5,1,217,131,Bachelor Of Education
+5,1,221,131,Bachelor Of Education
+5,1,222,131,Bachelor Of Education
+5,1,226,131,Bachelor Of Education
+5,1,230,131,Bachelor Of Education
+5,1,231,131,Bachelor Of Education
+5,1,232,131,Bachelor Of Education
+5,1,233,131,Bachelor Of Education
+5,1,234,131,Bachelor Of Education
+5,1,329,131,Bachelor Of Education
+5,1,336,131,Bachelor Of Education
+5,1,338,131,Bachelor Of Education
+5,1,348,131,Bachelor Of Education
 5,1,229,375,Bachelor Of Education (English/Literature)
-5,1,323,880,Bachelor Of Education (GEOG/CRE)
+5,1,323,561,Bachelor Of Education (GEOG/CRE)
 5,1,227,373,Bachelor Of Education (Geography/CRE)
 5,1,401,829,Bachelor Of Education (Math/Sports Science)
 5,1,380,794,Bachelor Of Education (Primary)(Art/English)
@@ -519,115 +509,99 @@ campus_id_code,level_code,program_core_id,program_id_code,program_name
 5,1,209,554,Bachelor Of Education 1
 5,1,326,563,Bachelor Of Education 10
 5,1,327,562,Bachelor Of Education 11
-5,1,318,546,Bachelor Of Science With Education
-5,1,344,619,Bachelor Of Science With Education
-5,1,39,688,Bachelor of Agricultural Science and Entrepreneurship
+5,1,318,268,Bachelor Of Science With Education
+5,1,344,268,Bachelor Of Science With Education
+5,1,39,72,Bachelor of Agricultural Science and Entrepreneurship
 5,1,363,694,Bachelor of Agricultural Science and Entrepreurship (base)
-5,1,108,601,Bachelor of Arts With Education
-5,1,441,951,Bachelor of Arts in Journalism and Mass Communication
-5,1,46,390,Bachelor of Arts in Mass Communication
-5,1,163,612,Bachelor of Arts with Education
-5,1,164,616,Bachelor of Arts with Education
-5,1,173,606,Bachelor of Arts with Education
-5,1,312,540,Bachelor of Arts with Education
-5,1,315,543,Bachelor of Arts with Education
-5,1,319,547,Bachelor of Arts with Education
-5,1,341,604,Bachelor of Arts with Education
-5,1,345,620,Bachelor of Arts with Education
+5,1,441,930,Bachelor of Arts in Journalism and Mass Communication
+5,1,46,80,Bachelor of Arts in Mass Communication
 5,1,311,539,Bachelor of Arts with Education (CRE/ECON)
 5,1,317,545,Bachelor of Arts with Education (HIST/ECON)
-5,1,453,986,Bachelor of Arts with Education(AIO)
-5,1,1,382,Bachelor of Business Administration
-5,1,83,383,Bachelor of Child Development and Children's Ministry
-5,1,69,385,Bachelor of Development Studies
-5,1,68,526,Bachelor of Development and Social Entrepreneurship
-5,1,80,384,Bachelor of Divinity
-5,1,116,776,Bachelor of Divinity (Modular)
-5,1,12,491,Bachelor of Economics and Management
-5,1,213,358,Bachelor of Education
-5,1,216,362,Bachelor of Education
-5,1,221,367,Bachelor of Education
-5,1,338,588,Bachelor of Education
-5,1,428,912,Bachelor of Education (PRIMARY)
+5,1,453,983,Bachelor of Arts with Education(AIO)
+5,1,1,1,Bachelor of Business Administration
+5,1,83,151,Bachelor of Child Development and Children's Ministry
+5,1,69,100,Bachelor of Development Studies
+5,1,68,99,Bachelor of Development and Social Entrepreneurship
+5,1,80,146,Bachelor of Divinity
+5,1,116,197,Bachelor of Divinity (Modular)
+5,1,12,11,Bachelor of Economics and Management
+5,1,428,907,Bachelor of Education (PRIMARY)
 5,1,328,565,Bachelor of Education (Primary)(Kiswahili/CRE)
-5,1,429,913,Bachelor of Education (SECONDARY)
+5,1,429,908,Bachelor of Education (SECONDARY)
 5,1,337,587,Bachelor of Education (Secondary)(Biology/Sports Science)
 5,1,395,821,Bachelor of Education (Secondary)(Geog/ICT)
 5,1,396,824,Bachelor of Education (Secondary)(Geography/Sports Science)
 5,1,397,825,Bachelor of Education (Secondary)(Music/Sports Science)
 5,1,256,493,Bachelor of Environment and Disaster Management
-5,1,49,387,Bachelor of Governance and International Relations
-5,1,6,490,Bachelor of Procurement and Logistics Management
-5,1,48,399,Bachelor of Public Administration and Management
-5,1,60,389,Bachelor of Science in Agribusiness
-5,1,43,341,Bachelor of Science in Civil and Environmental Engineering
+5,1,49,83,Bachelor of Governance and International Relations
+5,1,6,6,Bachelor of Procurement and Logistics Management
+5,1,48,82,Bachelor of Public Administration and Management
+5,1,60,91,Bachelor of Science in Agribusiness
+5,1,43,77,Bachelor of Science in Civil and Environmental Engineering
 5,1,342,605,Bachelor of Science in Education
-5,1,38,388,Bachelor of Science in Information Technology
-5,1,454,991,Bachelor of Science with Education (AIO)
+5,1,38,71,Bachelor of Science in Information Technology
+5,1,454,988,Bachelor of Science with Education (AIO)
 5,1,321,549,Bachelor of Science with Education (Mathematics/Economics)
-5,1,77,386,Bachelor of Social Work and Social Administration
-5,2,252,479,Master of Arts in Theology and Development
-5,2,112,483,Master of Arts in Translation and Language Development
-5,2,123,478,Master of Business Administration
-5,2,105,484,Master of Development Studies
-5,2,415,877,Master of Education Administration and Management
-5,2,184,481,Master of Education in Administration and Planning
+5,1,77,141,Bachelor of Social Work and Social Administration
+5,2,252,326,Master of Arts in Theology and Development
+5,2,112,191,Master of Arts in Translation and Language Development
+5,2,123,209,Master of Business Administration
+5,2,105,183,Master of Development Studies
+5,2,415,876,Master of Education Administration and Management
+5,2,184,276,Master of Education in Administration and Planning
 5,2,253,482,"Master of Education, Management and Administration222"
-5,2,65,480,Master of Social Work
-5,5,200,396,PostGraduate Diploma In Christian Ministries
+5,2,65,208,Master of Social Work
+5,5,200,331,PostGraduate Diploma In Christian Ministries
 5,5,255,489,Postgraduate Diploma In Alcohol And Substance Abuse Counseling
-5,5,117,485,Postgraduate Diploma In Human Resource Management
+5,5,117,200,Postgraduate Diploma In Human Resource Management
 5,5,254,486,Postgraduate Diploma In Project Planning
-5,5,235,400,Postgraduate Diploma In Public Administration And Management
+5,5,235,187,Postgraduate Diploma In Public Administration And Management
 5,5,237,402,Postgraduate Diploma in Development Monitoring and Evaluation
-5,5,211,397,Postgraduate Diploma in Education
-5,5,54,398,Postgraduate Diploma in Water and Sanitation
-6,0,246,757,Certificate in Theology
-6,0,367,756,Diploma In Theology
-6,0,2,505,Diploma in Business Administration
-6,0,212,760,Diploma in Child Development and Children's Ministry
+5,5,211,353,Postgraduate Diploma in Education
+5,5,54,294,Postgraduate Diploma in Water and Sanitation
+6,0,236,309,Diploma In Theology
+6,0,367,309,Diploma In Theology
+6,0,2,2,Diploma in Business Administration
+6,0,212,357,Diploma in Child Development and Children's Ministry
 6,0,268,761,Diploma in Christian Ministries
-6,0,210,837,Diploma in Guidance and Counselling
-6,0,236,748,Diploma in Theology
-7,0,218,874,Diploma in Nursing
-9,0,7,792,Diploma In Procurement And Logistics Management
-9,0,2,791,Diploma in Business Administration
-9,1,74,639,Bachelor Of Education
-9,1,230,645,Bachelor Of Education
-9,1,248,646,Bachelor Of Education
-9,1,325,640,Bachelor Of Education
-9,1,329,859,Bachelor Of Education
-9,1,348,647,Bachelor Of Education
-9,1,398,826,Bachelor Of Education
-9,1,323,643,Bachelor Of Education (GEOG/CRE)
-9,1,214,649,Bachelor Of Education (MATH/GEOG)
-9,1,364,731,Bachelor Of Education (MATH/GEOG)
-9,1,224,648,Bachelor Of Education (Primary)(Mathematics/Sports Science)
-9,1,204,883,Bachelor Of Education (Secondary)(Agriculture Double Main)
-9,1,247,858,Bachelor Of Education (Secondary)(Art - Double Main)
+6,0,210,351,Diploma in Guidance and Counselling
+7,0,218,364,Diploma in Nursing
+9,0,7,7,Diploma In Procurement And Logistics Management
+9,0,2,2,Diploma in Business Administration
+9,1,74,131,Bachelor Of Education
+9,1,221,131,Bachelor Of Education
+9,1,230,131,Bachelor Of Education
+9,1,248,131,Bachelor Of Education
+9,1,325,131,Bachelor Of Education
+9,1,329,131,Bachelor Of Education
+9,1,348,131,Bachelor Of Education
+9,1,398,131,Bachelor Of Education
+9,1,323,561,Bachelor Of Education (GEOG/CRE)
+9,1,214,427,Bachelor Of Education (MATH/GEOG)
+9,1,364,427,Bachelor Of Education (MATH/GEOG)
+9,1,224,370,Bachelor Of Education (Primary)(Mathematics/Sports Science)
+9,1,204,345,Bachelor Of Education (Secondary)(Agriculture Double Main)
+9,1,247,465,Bachelor Of Education (Secondary)(Art - Double Main)
 9,1,421,885,Bachelor Of Education (Secondary)(Biology/Computer)
 9,1,422,886,Bachelor Of Education (Secondary)(Math/Computer)
 9,1,365,736,Bachelor Of Education (Secondary)(Math/Physics)
-9,1,453,987,Bachelor of Arts with Education(AIO)
-9,1,1,743,Bachelor of Business Administration
-9,1,221,638,Bachelor of Education
-9,1,428,916,Bachelor of Education (PRIMARY)
-9,1,429,917,Bachelor of Education (SECONDARY)
+9,1,453,983,Bachelor of Arts with Education(AIO)
+9,1,1,1,Bachelor of Business Administration
+9,1,428,907,Bachelor of Education (PRIMARY)
+9,1,429,908,Bachelor of Education (SECONDARY)
 9,1,420,884,Bachelor of Education (Secondary)(Business Education DM)
-9,1,324,642,Bachelor of Education(Primary)(English/SST)
-9,1,48,1175,Bachelor of Public Administration and Management
-9,1,454,992,Bachelor of Science with Education (AIO)
-9,1,77,1173,Bachelor of Social Work and Social Administration
+9,1,324,559,Bachelor of Education(Primary)(English/SST)
+9,1,48,82,Bachelor of Public Administration and Management
+9,1,454,988,Bachelor of Science with Education (AIO)
+9,1,77,141,Bachelor of Social Work and Social Administration
 12,1,335,584,Bachelor of Science Environmental Health and Safety Management
 12,1,270,525,Bachelor of Science in Oil and Gas Management
-12,2,17,522,Master of Business Administration in Oil and Gas Management
-12,2,188,523,Master of Laws in Oil and Gas
+12,2,17,203,Master of Business Administration in Oil and Gas Management
+12,2,188,290,Master of Laws in Oil and Gas
 12,2,301,524,Master of Science in Environmental Health and Safety Management
 13,1,24,102,Bachelor of Human Nutrition and Clinical Dietetics
-13,1,359,676,Bachelor of Human Nutrition and Clinical Dietetics
-16,0,246,781,Certificate in Theology
-16,0,195,780,Diploma In Theology (modular)
-16,0,236,779,Diploma in Theology
-17,0,246,853,Certificate in Theology
-17,0,236,854,Diploma in Theology
+13,1,359,102,Bachelor of Human Nutrition and Clinical Dietetics
+16,0,236,309,Diploma In Theology
+16,0,195,311,Diploma In Theology (modular)
+17,0,236,309,Diploma In Theology
 18,0,23,18,Diploma In Health Administration
