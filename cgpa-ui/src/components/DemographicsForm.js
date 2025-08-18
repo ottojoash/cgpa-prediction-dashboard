@@ -19,22 +19,7 @@ const DemographicsForm = ({ data, onChange, touched = {} }) => {
         Demographic Details
       </Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            select
-            {...field("level")}
-            label="Level"
-            fullWidth
-            required
-            onChange={(e) => onChange("level", Number(e.target.value))}
-          >
-            <MenuItem value={0}>Certificate</MenuItem>
-            <MenuItem value={1}>Diploma</MenuItem>
-            <MenuItem value={2}>Undergraduate</MenuItem>
-            <MenuItem value={3}>Postgraduate</MenuItem>
-          </TextField>
-        </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6}>
           <TextField
             select
             name="marital_status"
@@ -49,7 +34,7 @@ const DemographicsForm = ({ data, onChange, touched = {} }) => {
           </TextField>
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6}>
           <TextField
             select
             {...field("gender")}
