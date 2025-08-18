@@ -21,11 +21,10 @@ const LEVEL_LABELS = {
 
 function InstitutionalForm({ data, onChange, touched = {} }) {
   const [campusOptions, setCampusOptions] = useState([]);
-  const [programRows, setProgramRows] = useState([]); // {campus_id_code, level_code, program_core_id, program_id_code, program_name}
+  const [programRows, setProgramRows] = useState([]); // raw: {campus_id_code, level_code, program_core_id, program_id_code, program_name}
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
-  // Required-field helper
   const req = (name) => ({
     value: data[name] ?? "",
     error:
@@ -42,7 +41,6 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
         : " ",
   });
 
-  // Minimal CSV parser (no quoted fields support)
   const parseCSV = (text) => {
     const lines = text.trim().split(/\r?\n/);
     if (lines.length < 2) return [];
@@ -60,7 +58,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
     setLoading(true);
     setLoadError("");
 
-    const loadLookups = async () => {
+    (async () => {
       try {
         // campuses.csv
         const cRes = await fetch("/lookups/campuses.csv");
@@ -72,12 +70,10 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             label: (r.campus_name || "").trim(),
             value: Number(r.campus_id_code),
           }))
-          .filter(
-            (o) => o.label && o.label !== "" && Number.isFinite(o.value)
-          )
+          .filter((o) => o.label && o.label !== "" && Number.isFinite(o.value))
           .sort((a, b) => a.label.localeCompare(b.label));
 
-        // programs_by_campus.csv (with level & core)
+        // programs_by_campus.csv
         const pRes = await fetch("/lookups/programs_by_campus.csv");
         if (!pRes.ok) throw new Error("programs_by_campus.csv not found");
         const pTxt = await pRes.text();
@@ -113,51 +109,69 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           setLoading(false);
         }
       }
-    };
+    })();
 
-    loadLookups();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Which campus selected? (0 is valid)
+  // --- NORMALIZE LEVEL CODES ---
+  // Detect if CSV level_code is 0-based or 1-based. If we see a 0, assume 0-based.
+  // Else if we see a 1 (and no 0), treat as 1-based and subtract 1.
+  const levelOffset = useMemo(() => {
+    const codes = programRows.map((r) => r.level_code).filter(Number.isFinite);
+    const hasZero = codes.includes(0);
+    const hasOne = codes.includes(1);
+    // 0-based if 0 present; otherwise if 1 present assume 1-based -> offset 1
+    return hasZero ? 0 : hasOne ? 1 : 0;
+  }, [programRows]);
+
+  const normalizeLevel = (raw) =>
+    Number.isFinite(raw) ? raw - levelOffset : raw;
+
+  // Campus chosen? (0 is valid)
   const campusChosen =
     typeof data.campus_id_code !== "undefined" &&
     data.campus_id_code !== "" &&
     data.campus_id_code !== null;
 
-  // Level options available for chosen campus
+  // Level options (normalized) for chosen campus
   const levelOptions = useMemo(() => {
     if (!campusChosen) return [];
     const campusId = Number(data.campus_id_code);
     const levels = new Set(
       programRows
         .filter((r) => r.campus_id_code === campusId)
-        .map((r) => r.level_code)
+        .map((r) => normalizeLevel(r.level_code))
+        .filter((v) => Number.isFinite(v))
     );
     const opts = Array.from(levels)
       .sort((a, b) => a - b)
-      .map((code) => ({ value: code, label: LEVEL_LABELS[code] || `Level ${code}` }));
+      .map((code) => ({
+        value: code,
+        label: LEVEL_LABELS[code] || `Level ${code}`,
+      }));
     return opts;
-  }, [programRows, data.campus_id_code, campusChosen]);
+  }, [programRows, data.campus_id_code, campusChosen, levelOffset]);
 
   const levelChosen =
     typeof data.level !== "undefined" &&
     data.level !== "" &&
     data.level !== null;
 
-  // Program options filtered by campus + level; dedupe by core
+  // Program options filtered by campus + normalized level; dedupe by core
   const programOptions = useMemo(() => {
     if (!campusChosen || !levelChosen) return [];
     const campusId = Number(data.campus_id_code);
-    const levelCode = Number(data.level);
+    const wantLevel = Number(data.level);
 
     const rows = programRows.filter(
-      (r) => r.campus_id_code === campusId && r.level_code === levelCode
+      (r) =>
+        r.campus_id_code === campusId &&
+        normalizeLevel(r.level_code) === wantLevel
     );
 
-    // Deduplicate by program_core_id (keep first)
     const seenCore = new Set();
     const opts = [];
     for (const r of rows) {
@@ -167,7 +181,14 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
       }
     }
     return opts.sort((a, b) => a.label.localeCompare(b.label));
-  }, [programRows, campusChosen, levelChosen, data.campus_id_code, data.level]);
+  }, [
+    programRows,
+    campusChosen,
+    levelChosen,
+    data.campus_id_code,
+    data.level,
+    levelOffset,
+  ]);
 
   if (loading) {
     return (
@@ -225,7 +246,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           </TextField>
         </Grid>
 
-        {/* Level (derived from campus) */}
+        {/* Level (derived from campus; normalized) */}
         <Grid item xs={12} sm={6}>
           <TextField
             select
@@ -234,7 +255,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             required
             {...req("level")}
             onChange={(e) => {
-              const lvl = Number(e.target.value);
+              const lvl = Number(e.target.value); // always ordinal (0-based)
               onChange("level", lvl);
               // reset program when level changes
               onChange("program_id_code", "");
@@ -248,13 +269,15 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             ))}
             {levelOptions.length === 0 && (
               <MenuItem disabled value="">
-                {campusChosen ? "No levels for selected campus" : "Select campus first"}
+                {campusChosen
+                  ? "No levels for selected campus"
+                  : "Select campus first"}
               </MenuItem>
             )}
           </TextField>
         </Grid>
 
-        {/* Program (filtered by campus + level) */}
+        {/* Program (filtered by campus + normalized level) */}
         <Grid item xs={12} sm={6}>
           <TextField
             select
