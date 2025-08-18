@@ -8,86 +8,34 @@ import {
   CircularProgress,
 } from "@mui/material";
 
-/**
- * Human labels for the ordinal level codes expected by the model (0-based).
- * 0: Certificate, 1: Diploma, 2: Bachelor’s, 3: Master’s, 4: PhD, 5: Short, 6: PG Dip, 7: Unknown
- */
-const LEVEL_LABELS = {
-  0: "Certificate",
-  1: "Diploma",
-  2: "Bachelor’s",
-  3: "Master’s",
-  4: "PhD",
-  5: "Short Courses",
-  6: "Postgraduate Diploma",
-  7: "Unknown",
+// UI labels are 1-based for readability.
+// We'll convert UI -> model by subtracting 1 on change,
+// and convert model -> UI by adding 1 when displaying.
+const UI_LEVEL_LABELS = {
+  1: "Certificate / Diploma", // CSV level_code 0 (Diploma + HEC)
+  2: "Bachelor’s", // CSV level_code 1
+  3: "Master’s", // CSV level_code 2
+  4: "PhD", // CSV level_code 3
+  5: "Short Courses", // CSV level_code 4
+  6: "Postgraduate Diploma", // CSV level_code 5
+  7: "University Bridging Year", // CSV level_code 6
+  8: "Unknown", // CSV level_code 7 (if ever present)
 };
-
-/**
- * Tiny CSV parser that respects quoted fields with commas.
- * Returns array of objects keyed by header cells.
- */
-function parseCSV(text) {
-  if (!text || !text.trim()) return [];
-  const rows = [];
-  const lines = [];
-  let i = 0;
-  const s = text.replace(/\r\n/g, "\n");
-
-  // Split into lines while keeping empty last line out
-  for (const line of s.split("\n")) {
-    if (line !== "") lines.push(line);
-  }
-  if (lines.length === 0) return [];
-
-  // Tokenize a CSV line respecting quotes
-  const splitLine = (line) => {
-    const out = [];
-    let cur = "";
-    let quoted = false;
-    for (let j = 0; j < line.length; j++) {
-      const ch = line[j];
-      if (ch === '"') {
-        // Toggle quoted unless escaping a quote
-        if (quoted && line[j + 1] === '"') {
-          cur += '"'; // escaped quote
-          j++;
-        } else {
-          quoted = !quoted;
-        }
-      } else if (ch === "," && !quoted) {
-        out.push(cur);
-        cur = "";
-      } else {
-        cur += ch;
-      }
-    }
-    out.push(cur);
-    return out.map((x) => x.trim());
-  };
-
-  const header = splitLine(lines[0]);
-  for (i = 1; i < lines.length; i++) {
-    const cols = splitLine(lines[i]);
-    // ignore ragged line lengths
-    if (cols.length !== header.length) continue;
-    const obj = {};
-    header.forEach((h, idx) => {
-      obj[h] = cols[idx];
-    });
-    rows.push(obj);
-  }
-  return rows;
-}
 
 function InstitutionalForm({ data, onChange, touched = {} }) {
   const [campusOptions, setCampusOptions] = useState([]);
-  const [programRows, setProgramRows] = useState([]); // raw: {campus_id_code, level_code, program_core_id, program_id_code, program_name}
+  const [programRows, setProgramRows] = useState([]); // {campus_id_code, level_code(0-based), program_core_id, program_id_code, program_name}
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
   const req = (name) => ({
-    value: data[name] ?? "",
+    // keep storing 0-based in data.level for the model
+    value:
+      name === "level"
+        ? typeof data.level === "number"
+          ? data.level + 1
+          : "" // show 1-based in UI
+        : data[name] ?? "",
     error:
       touched[name] &&
       (data[name] === "" ||
@@ -102,6 +50,18 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
         : " ",
   });
 
+  const parseCSV = (text) => {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    const header = lines[0].split(",").map((s) => s.trim());
+    return lines.slice(1).map((line) => {
+      const cols = line.split(",").map((s) => s.trim());
+      const obj = {};
+      header.forEach((h, i) => (obj[h] = cols[i]));
+      return obj;
+    });
+  };
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -109,7 +69,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
 
     (async () => {
       try {
-        // --- campuses.csv ---
+        // campuses.csv
         const cRes = await fetch("/lookups/campuses.csv");
         if (!cRes.ok) throw new Error("campuses.csv not found");
         const cTxt = await cRes.text();
@@ -122,14 +82,14 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           .filter((o) => o.label && o.label !== "" && Number.isFinite(o.value))
           .sort((a, b) => a.label.localeCompare(b.label));
 
-        // --- programs_by_campus.csv ---
+        // programs_by_campus.csv (level_code is 0-based in CSV)
         const pRes = await fetch("/lookups/programs_by_campus.csv");
         if (!pRes.ok) throw new Error("programs_by_campus.csv not found");
         const pTxt = await pRes.text();
         const pRows = parseCSV(pTxt)
           .map((r) => ({
             campus_id_code: Number(r.campus_id_code),
-            level_code: Number(r.level_code), // may be 0-based OR 1-based
+            level_code: Number(r.level_code), // 0-based
             program_core_id: Number(r.program_core_id),
             program_id_code: Number(r.program_id_code),
             program_name: (r.program_name || "").trim(),
@@ -137,10 +97,10 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           .filter(
             (r) =>
               r.program_name !== "" &&
+              Number.isFinite(r.program_id_code) &&
               Number.isFinite(r.campus_id_code) &&
               Number.isFinite(r.level_code) &&
-              Number.isFinite(r.program_core_id) &&
-              Number.isFinite(r.program_id_code)
+              Number.isFinite(r.program_core_id)
           );
 
         if (!cancelled) {
@@ -165,80 +125,62 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
     };
   }, []);
 
-  // --- Detect if level_code in CSV is 0-based or 1-based ---
-  // If any row has 0 => 0-based. Else if any row has 1 (and none has 0) => treat as 1-based and subtract 1.
-  const levelOffset = useMemo(() => {
-    const codes = programRows.map((r) => r.level_code).filter(Number.isFinite);
-    const hasZero = codes.includes(0);
-    const hasOne = codes.includes(1);
-    return hasZero ? 0 : hasOne ? 1 : 0;
-  }, [programRows]);
-
-  const normalizeLevel = (raw) =>
-    Number.isFinite(raw) ? raw - levelOffset : raw;
-
-  // Campus chosen? (0 is a valid campus)
+  // Campus chosen? (0 is valid)
   const campusChosen =
     typeof data.campus_id_code !== "undefined" &&
     data.campus_id_code !== "" &&
     data.campus_id_code !== null;
 
-  // Level options (normalized -> 0-based) for chosen campus
-  const levelOptions = useMemo(() => {
-    if (!campusChosen) return [];
-    const campusId = Number(data.campus_id_code);
-    const levels = new Set(
-      programRows
-        .filter((r) => r.campus_id_code === campusId)
-        .map((r) => normalizeLevel(r.level_code))
-        .filter((v) => Number.isFinite(v))
-    );
-    const opts = Array.from(levels)
-      .sort((a, b) => a - b)
-      .map((code) => ({
-        value: code,
-        label: LEVEL_LABELS[code] || `Level ${code}`,
-      }));
-    return opts;
-  }, [programRows, data.campus_id_code, campusChosen, levelOffset]);
-
+  // Level chosen? (data.level is 0-based internally; UI shows +1)
   const levelChosen =
     typeof data.level !== "undefined" &&
     data.level !== "" &&
-    data.level !== null;
+    data.level !== null &&
+    Number.isFinite(Number(data.level));
 
-  // Program options filtered by campus + normalized level; dedupe by core id
+  // Level options for chosen campus (build from CSV 0-based codes → map to UI 1-based)
+  const levelOptions = useMemo(() => {
+    if (!campusChosen) return [];
+    const campusId = Number(data.campus_id_code);
+    const codes0 = new Set(
+      programRows
+        .filter((r) => r.campus_id_code === campusId)
+        .map((r) => r.level_code)
+        .filter((v) => Number.isFinite(v))
+    );
+    const opts = Array.from(codes0)
+      .sort((a, b) => a - b)
+      .map((code0) => {
+        const uiVal = code0 + 1; // UI is 1-based
+        return {
+          value: uiVal,
+          label: UI_LEVEL_LABELS[uiVal] || `Level ${uiVal}`,
+        };
+      });
+    return opts;
+  }, [programRows, data.campus_id_code, campusChosen]);
+
+  // Program options filtered by campus + (model/internal) level = (UI - 1)
   const programOptions = useMemo(() => {
     if (!campusChosen || !levelChosen) return [];
     const campusId = Number(data.campus_id_code);
-    const wantLevel = Number(data.level);
+    const needLevel0 = Number(data.level); // already 0-based internally
+
     const rows = programRows.filter(
-      (r) =>
-        r.campus_id_code === campusId &&
-        normalizeLevel(r.level_code) === wantLevel
+      (r) => r.campus_id_code === campusId && r.level_code === needLevel0
     );
 
-    // Deduplicate by program_core_id (keep first by name asc)
-    const byName = [...rows].sort((a, b) =>
-      (a.program_name || "").localeCompare(b.program_name || "")
-    );
+    // dedupe by program_core_id
     const seenCore = new Set();
     const opts = [];
-    for (const r of byName) {
-      if (r.program_name && !seenCore.has(r.program_core_id)) {
+    for (const r of rows) {
+      if (!seenCore.has(r.program_core_id) && r.program_name) {
         seenCore.add(r.program_core_id);
         opts.push({ value: r.program_id_code, label: r.program_name });
       }
     }
-    return opts;
-  }, [
-    programRows,
-    campusChosen,
-    levelChosen,
-    data.campus_id_code,
-    data.level,
-    levelOffset,
-  ]);
+    return opts.sort((a, b) => a.label.localeCompare(b.label));
+  }, [programRows, campusChosen, levelChosen, data.campus_id_code, data.level]);
 
   if (loading) {
     return (
@@ -278,7 +220,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             onChange={(e) => {
               const campusVal = Number(e.target.value);
               onChange("campus_id_code", campusVal);
-              // Reset level & program when campus changes
+              // reset level & program when campus changes
               onChange("level", "");
               onChange("program_id_code", "");
             }}
@@ -296,7 +238,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           </TextField>
         </Grid>
 
-        {/* Level (normalized ordinal) */}
+        {/* Level (UI is 1-based; stored as 0-based) */}
         <Grid item xs={12} sm={6}>
           <TextField
             select
@@ -305,9 +247,10 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             required
             {...req("level")}
             onChange={(e) => {
-              const lvl = Number(e.target.value); // model expects ordinal (0-based)
-              onChange("level", lvl);
-              // Reset program when level changes
+              const uiVal = Number(e.target.value); // 1-based from UI
+              const modelVal = uiVal - 1; // convert to 0-based for model & CSV
+              onChange("level", modelVal);
+              // reset program when level changes
               onChange("program_id_code", "");
             }}
             disabled={!campusChosen}
@@ -327,7 +270,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           </TextField>
         </Grid>
 
-        {/* Program (filtered by campus & level) */}
+        {/* Program */}
         <Grid item xs={12} sm={6}>
           <TextField
             select
