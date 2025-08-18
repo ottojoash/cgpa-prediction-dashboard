@@ -195,7 +195,7 @@ function App() {
             {activeStep === 3 && (
               <SectionCard
                 title="🏫 Institutional Placement"
-                subtitle="Campus, program and curriculum"
+                subtitle="Details about your campus and program"
               >
                 <InstitutionalForm
                   data={formData}

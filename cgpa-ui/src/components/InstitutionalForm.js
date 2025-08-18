@@ -6,35 +6,45 @@ import {
   MenuItem,
   Typography,
   CircularProgress,
+  IconButton,
+  InputAdornment,
+  Tooltip,
+  Chip,
 } from "@mui/material";
+import ClearIcon from "@mui/icons-material/Clear";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import SearchIcon from "@mui/icons-material/Search";
 
 // UI labels are 1-based for readability.
-// We'll convert UI -> model by subtracting 1 on change,
-// and convert model -> UI by adding 1 when displaying.
+// We store 0-based in data.level (for the model), so convert UI->model by subtracting 1,
+// and show model->UI by adding 1.
 const UI_LEVEL_LABELS = {
-  1: "Certificate / Diploma", // CSV level_code 0 (Diploma + HEC)
-  2: "Bachelor’s", // CSV level_code 1
-  3: "Master’s", // CSV level_code 2
-  4: "PhD", // CSV level_code 3
-  5: "Short Courses", // CSV level_code 4
-  6: "Postgraduate Diploma", // CSV level_code 5
-  7: "University Bridging Year", // CSV level_code 6
-  8: "Unknown", // CSV level_code 7 (if ever present)
+  1: "Certificate / Diploma",
+  2: "Bachelor’s",
+  3: "Master’s",
+  4: "PhD",
+  5: "Short Courses",
+  6: "Postgraduate Diploma",
+  7: "University Bridging Year",
+  8: "Unknown",
 };
 
 function InstitutionalForm({ data, onChange, touched = {} }) {
   const [campusOptions, setCampusOptions] = useState([]);
-  const [programRows, setProgramRows] = useState([]); // {campus_id_code, level_code(0-based), program_core_id, program_id_code, program_name}
+  const [programRows, setProgramRows] = useState([]); // { campus_id_code, level_code(0-based), program_core_id, program_id_code, program_name }
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+
+  // UI-only filter to help users find a program quickly (no API changes)
+  const [programFilter, setProgramFilter] = useState("");
 
   const req = (name) => ({
     // keep storing 0-based in data.level for the model
     value:
       name === "level"
         ? typeof data.level === "number"
-          ? data.level + 1
-          : "" // show 1-based in UI
+          ? data.level + 1 // display as 1-based
+          : ""
         : data[name] ?? "",
     error:
       touched[name] &&
@@ -82,14 +92,14 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           .filter((o) => o.label && o.label !== "" && Number.isFinite(o.value))
           .sort((a, b) => a.label.localeCompare(b.label));
 
-        // programs_by_campus.csv (level_code is 0-based in CSV)
+        // programs_by_campus.csv (level_code is 0-based)
         const pRes = await fetch("/lookups/programs_by_campus.csv");
         if (!pRes.ok) throw new Error("programs_by_campus.csv not found");
         const pTxt = await pRes.text();
         const pRows = parseCSV(pTxt)
           .map((r) => ({
             campus_id_code: Number(r.campus_id_code),
-            level_code: Number(r.level_code), // 0-based
+            level_code: Number(r.level_code), // 0-based in CSV
             program_core_id: Number(r.program_core_id),
             program_id_code: Number(r.program_id_code),
             program_name: (r.program_name || "").trim(),
@@ -111,7 +121,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
       } catch (err) {
         if (!cancelled) {
           setLoadError(
-            "Failed to load lookups from /public/lookups (campuses.csv / programs_by_campus.csv)."
+            "We couldn’t load the campus/program lists. Please check that both files exist: /public/lookups/campuses.csv and /public/lookups/programs_by_campus.csv."
           );
           setCampusOptions([]);
           setProgramRows([]);
@@ -138,7 +148,7 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
     data.level !== null &&
     Number.isFinite(Number(data.level));
 
-  // Level options for chosen campus (build from CSV 0-based codes → map to UI 1-based)
+  // Level options for chosen campus (build from CSV 0-based → map to UI 1-based)
   const levelOptions = useMemo(() => {
     if (!campusChosen) return [];
     const campusId = Number(data.campus_id_code);
@@ -148,19 +158,21 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
         .map((r) => r.level_code)
         .filter((v) => Number.isFinite(v))
     );
+    // sort ascending; map to UI labels (1-based)
     const opts = Array.from(codes0)
       .sort((a, b) => a - b)
       .map((code0) => {
-        const uiVal = code0 + 1; // UI is 1-based
+        const uiVal = code0 + 1;
         return {
           value: uiVal,
           label: UI_LEVEL_LABELS[uiVal] || `Level ${uiVal}`,
+          code0,
         };
       });
     return opts;
   }, [programRows, data.campus_id_code, campusChosen]);
 
-  // Program options filtered by campus + (model/internal) level = (UI - 1)
+  // Program options filtered by campus + internal level (UI - 1)
   const programOptions = useMemo(() => {
     if (!campusChosen || !levelChosen) return [];
     const campusId = Number(data.campus_id_code);
@@ -170,17 +182,34 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
       (r) => r.campus_id_code === campusId && r.level_code === needLevel0
     );
 
-    // dedupe by program_core_id
+    // simple client-side search filter
+    const needle = programFilter.trim().toLowerCase();
+    const filtered = needle
+      ? rows.filter((r) => r.program_name.toLowerCase().includes(needle))
+      : rows;
+
+    // dedupe by program_core_id (already handled in your CSV generation, but keep it just in case)
     const seenCore = new Set();
     const opts = [];
-    for (const r of rows) {
+    for (const r of filtered) {
       if (!seenCore.has(r.program_core_id) && r.program_name) {
         seenCore.add(r.program_core_id);
         opts.push({ value: r.program_id_code, label: r.program_name });
       }
     }
     return opts.sort((a, b) => a.label.localeCompare(b.label));
-  }, [programRows, campusChosen, levelChosen, data.campus_id_code, data.level]);
+  }, [
+    programRows,
+    campusChosen,
+    levelChosen,
+    data.campus_id_code,
+    data.level,
+    programFilter,
+  ]);
+
+  // Small counters for hints
+  const levelCountForCampus = levelOptions.length;
+  const programCountForSelection = programOptions.length;
 
   if (loading) {
     return (
@@ -189,8 +218,8 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           🏫 Institutional Placement
         </Typography>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <CircularProgress size={20} />{" "}
-          <span>Loading campus/program lookups…</span>
+          <CircularProgress size={20} />
+          <span>Loading campus & program lists…</span>
         </div>
       </div>
     );
@@ -198,8 +227,18 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
 
   return (
     <div style={{ marginTop: "2rem" }}>
-      <Typography variant="h6" gutterBottom>
-        🏫 Institutional Placement
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        Choose your <strong>campus</strong>, then pick the{" "}
+        <strong>academic level</strong>, and finally select the{" "}
+        <strong>program</strong>.
+        <br />
+        <em>
+          Note: The program must match the campus and level you select.
+          <br />
+          If you change campus or level, you may need to re-select the program.
+        </em>
+        <br />
+        <br />
       </Typography>
 
       {loadError ? (
@@ -215,7 +254,9 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             select
             fullWidth
             label="Campus"
+            placeholder="Select campus"
             required
+            inputProps={{ "aria-label": "Campus" }}
             {...req("campus_id_code")}
             onChange={(e) => {
               const campusVal = Number(e.target.value);
@@ -223,10 +264,49 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
               // reset level & program when campus changes
               onChange("level", "");
               onChange("program_id_code", "");
+              setProgramFilter("");
+            }}
+            helperText={
+              req("campus_id_code").error
+                ? req("campus_id_code").helperText
+                : `Available levels: ${levelCountForCampus || 0}`
+            }
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  {campusChosen && (
+                    <Tooltip title="Clear campus">
+                      <IconButton
+                        aria-label="Clear campus"
+                        size="small"
+                        onClick={() => {
+                          onChange("campus_id_code", "");
+                          onChange("level", "");
+                          onChange("program_id_code", "");
+                          setProgramFilter("");
+                        }}
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  <Tooltip title="Campus determines which levels and programs you can choose.">
+                    <InfoOutlinedIcon
+                      fontSize="small"
+                      color="action"
+                      style={{ marginLeft: 6 }}
+                    />
+                  </Tooltip>
+                </InputAdornment>
+              ),
             }}
           >
             {campusOptions.map((o) => (
-              <MenuItem key={o.value} value={o.value}>
+              <MenuItem
+                key={o.value}
+                value={o.value}
+                style={{ whiteSpace: "normal", lineHeight: 1.2 }}
+              >
                 {o.label}
               </MenuItem>
             ))}
@@ -244,19 +324,61 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             select
             fullWidth
             label="Academic Level"
+            placeholder="Select level"
             required
+            inputProps={{ "aria-label": "Academic level" }}
             {...req("level")}
             onChange={(e) => {
               const uiVal = Number(e.target.value); // 1-based from UI
-              const modelVal = uiVal - 1; // convert to 0-based for model & CSV
+              const modelVal = uiVal - 1; // 0-based for model & CSV
               onChange("level", modelVal);
               // reset program when level changes
               onChange("program_id_code", "");
+              setProgramFilter("");
             }}
             disabled={!campusChosen}
+            helperText={
+              !campusChosen
+                ? "Select campus first"
+                : req("level").error
+                ? req("level").helperText
+                : `Programs available: ${programCountForSelection || 0}`
+            }
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  {levelChosen && (
+                    <Tooltip title="Clear level">
+                      <IconButton
+                        aria-label="Clear level"
+                        size="small"
+                        onClick={() => {
+                          onChange("level", "");
+                          onChange("program_id_code", "");
+                          setProgramFilter("");
+                        }}
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  <Tooltip title="Level must match the program’s academic level.">
+                    <InfoOutlinedIcon
+                      fontSize="small"
+                      color="action"
+                      style={{ marginLeft: 6 }}
+                    />
+                  </Tooltip>
+                </InputAdornment>
+              ),
+            }}
           >
             {levelOptions.map((o) => (
-              <MenuItem key={o.value} value={o.value}>
+              <MenuItem
+                key={o.value}
+                value={o.value}
+                style={{ whiteSpace: "normal", lineHeight: 1.2 }}
+              >
                 {o.label}
               </MenuItem>
             ))}
@@ -270,21 +392,76 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
           </TextField>
         </Grid>
 
+        {/* Program quick filter (client-side) */}
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Search program (optional)"
+            placeholder="Type to filter program names…"
+            value={programFilter}
+            onChange={(e) => setProgramFilter(e.target.value)}
+            disabled={!campusChosen || !levelChosen}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+              endAdornment: programFilter ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="Clear program search"
+                    size="small"
+                    onClick={() => setProgramFilter("")}
+                  >
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            }}
+            helperText={
+              !campusChosen
+                ? "Select campus first"
+                : !levelChosen
+                ? "Select level first"
+                : "Optional: narrow down the list below"
+            }
+          />
+        </Grid>
+
         {/* Program */}
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12}>
           <TextField
             select
             fullWidth
             label="Program"
+            placeholder="Select program"
             required
+            inputProps={{ "aria-label": "Program" }}
             {...req("program_id_code")}
             onChange={(e) =>
               onChange("program_id_code", Number(e.target.value))
             }
             disabled={!campusChosen || !levelChosen}
+            helperText={
+              !campusChosen
+                ? "Select campus first"
+                : !levelChosen
+                ? "Select level first"
+                : req("program_id_code").error
+                ? req("program_id_code").helperText
+                : `${programCountForSelection} program${
+                    programCountForSelection === 1 ? "" : "s"
+                  } found`
+            }
           >
             {programOptions.map((o) => (
-              <MenuItem key={o.value} value={o.value}>
+              <MenuItem
+                key={o.value}
+                value={o.value}
+                // Keep long titles readable
+                style={{ whiteSpace: "normal", lineHeight: 1.2 }}
+              >
                 {o.label}
               </MenuItem>
             ))}
@@ -306,12 +483,57 @@ function InstitutionalForm({ data, onChange, touched = {} }) {
             select
             fullWidth
             label="Nationality"
+            placeholder="Select nationality"
             value={data.is_national ?? ""}
             onChange={(e) => onChange("is_national", Number(e.target.value))}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Tooltip title="Used for reporting only; does not change available programs.">
+                    <InfoOutlinedIcon fontSize="small" color="action" />
+                  </Tooltip>
+                </InputAdornment>
+              ),
+            }}
           >
             <MenuItem value={1}>National</MenuItem>
             <MenuItem value={0}>International</MenuItem>
           </TextField>
+        </Grid>
+
+        {/* Small context chips (purely informational) */}
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          style={{ display: "flex", gap: 8, alignItems: "center" }}
+        >
+          {campusChosen && (
+            <Chip
+              size="small"
+              label={`Campus selected`}
+              color="default"
+              variant="outlined"
+            />
+          )}
+          {levelChosen && (
+            <Chip
+              size="small"
+              label={`Level: ${
+                UI_LEVEL_LABELS[(data.level ?? 0) + 1] ?? (data.level ?? 0) + 1
+              }`}
+              color="default"
+              variant="outlined"
+            />
+          )}
+          {data.program_id_code ? (
+            <Chip
+              size="small"
+              label={`Program chosen`}
+              color="default"
+              variant="outlined"
+            />
+          ) : null}
         </Grid>
       </Grid>
     </div>
