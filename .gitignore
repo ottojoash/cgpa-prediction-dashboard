@@ -51,3 +51,6 @@ cgpa-ui/node_modules/.cache/default-development/0.pack
 cgpa-ui/node_modules/.cache/default-development/index.pack
 cgpa-ui/node_modules/.cache/.eslintcache
 *.pack
+/cgpa-ui/node_modules
+/cgpa-ui/node_modules/typescript
+/cgpa-ui/node_modules
