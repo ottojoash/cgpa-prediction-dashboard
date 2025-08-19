@@ -1,5 +1,5 @@
 // src/components/ALevelForm.jsx
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Grid,
   TextField,
@@ -7,244 +7,188 @@ import {
   MenuItem,
   ToggleButton,
   ToggleButtonGroup,
-  IconButton,
-  Tooltip,
-  LinearProgress,
-  InputAdornment,
-  Button,
+  Paper,
+  Chip,
+  Box,
 } from "@mui/material";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import ClearIcon from "@mui/icons-material/Clear";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
-// ---- Config ----
-const MAX_SUBJECTS = 5; // typical UACE max
-const MIN_SUBJECTS = 3; // typical principal min for scoring
-const MIN_YEAR = 2005; // sensible lower bound for UI
+// ---- Grading systems (ordered as requested) ----
+const GRADING = {
+  LEGACY_25: "LEGACY_25", // earliest: max 25 (≈ 9/8/7/6/5)
+  CLASSIC_18: "CLASSIC_18", // popular classic: max 18 (6/5/4/3/2)
+  COMPETENCY_60: "COMPETENCY_60", // current letters; many HEIs map ~ to 20/15/10/5/2
+};
+
+const LETTERS = ["A", "B", "C", "D", "E", "O", "F"];
+
+// principal points per letter for each system
+const POINTS = {
+  [GRADING.LEGACY_25]: { A: 9, B: 8, C: 7, D: 6, E: 5, O: 1, F: 0 },
+  [GRADING.CLASSIC_18]: { A: 6, B: 5, C: 4, D: 3, E: 2, O: 1, F: 0 },
+  // UNEB reports letters; many universities internally use this spread
+  [GRADING.COMPETENCY_60]: { A: 20, B: 15, C: 10, D: 5, E: 2, O: 1, F: 0 },
+};
+
+// weak/distinction rules for features (aligns with your extractor)
+const isDistinction = (letter) => letter === "A";
+const isWeak = (letter) => letter === "D" || letter === "E" || letter === "F"; // ≤ C are strong
+
+// reasonable UACE year range
 const CURRENT_YEAR = new Date().getFullYear();
+const UACE_YEARS = Array.from({ length: 20 }, (_, i) => CURRENT_YEAR - i); // this year back 20
 
-// Grading systems
-// NOTE: We compute "grade weights" because your backend's extractAlevelFeatures()
-// operates on numeric weights, e.g., weak if weight <= 3, distinction if >= 5.
-const GRADE_WEIGHT_TABLES = {
-  18: { A: 6, B: 5, C: 4, D: 3, E: 2, O: 1, F: 0 }, // classic “/18” system
-  25: { A: 9, B: 8, C: 7, D: 6, E: 5, O: 1, F: 0 }, // intermediate “/25” (capped)
-  60: { A: 20, B: 15, C: 10, D: 5, E: 2, O: 1, F: 0 }, // modern “/60” style weights
-};
-
-const GRADE_OPTIONS = [
-  { value: "A", label: "A" },
-  { value: "B", label: "B" },
-  { value: "C", label: "C" },
-  { value: "D", label: "D" },
-  { value: "E", label: "E" },
-  { value: "O", label: "O (Subsidiary)" },
-  { value: "F", label: "F (Fail)" },
-];
-
-const years = Array.from(
-  { length: Math.max(0, CURRENT_YEAR - MIN_YEAR + 1) },
-  (_, i) => MIN_YEAR + i
-);
-
-// ---- Helpers ----
-const mean = (arr) =>
-  arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-const stddev = (arr, avg) => {
-  if (!arr.length) return 0;
-  const variance =
-    arr.reduce((s, v) => s + Math.pow(v - avg, 2), 0) / arr.length;
-  return Math.sqrt(variance);
-};
-const round = (n, dp = 2) => (Number.isFinite(n) ? Number(n.toFixed(dp)) : n);
-const dominant = (arr) => {
-  const freq = new Map();
-  arr.forEach((v) => freq.set(v, (freq.get(v) || 0) + 1));
-  let best = 0;
-  let bestCount = -1;
-  for (const [val, count] of freq.entries()) {
-    if (count > bestCount) {
-      best = val;
-      bestCount = count;
+// Small helper: shallow compare object values and emit only when changed
+function emitIfChanged(prevRef, next, onChange) {
+  const prev = prevRef.current || {};
+  let changed = false;
+  for (const k of Object.keys(next)) {
+    if (prev[k] !== next[k]) {
+      changed = true;
+      break;
     }
   }
-  return best;
-};
+  if (changed) {
+    prevRef.current = next;
+    for (const [k, v] of Object.entries(next)) onChange(k, v);
+  }
+}
 
-// Convert grades → weights for the chosen system
-const toWeights = (grades, systemKey) => {
-  const table = GRADE_WEIGHT_TABLES[systemKey] || GRADE_WEIGHT_TABLES["60"];
-  return grades.map((g) => table[g] ?? 0);
-};
+export default function ALevelForm({ data, onChange, touched = {} }) {
+  // ---- Local UI state (never write to parent directly) ----
+  const [grading, setGrading] = useState(GRADING.LEGACY_25);
+  const [uaceYear, setUaceYear] = useState(
+    typeof data.uace_year_code === "number"
+      ? data.uace_year_code
+      : UACE_YEARS[0]
+  );
+  const [gpPass, setGpPass] = useState(
+    typeof data.general_paper === "number" ? data.general_paper : 1
+  );
 
-// ---- Component ----
-const ALevelForm = ({ data, onChange, touched = {} }) => {
-  // Local UI state for raw, user-friendly inputs
-  const [gradingSystem, setGradingSystem] = useState("60"); // "18" | "25" | "60"
+  // Up to 5 principal subjects – Subject 1..5. Store as letters.
   const [subjects, setSubjects] = useState(
-    Array.isArray(data._uace_subject_grades)
-      ? data._uace_subject_grades
-      : ["", "", ""]
-  ); // store as letter grades (A–E, O, F)
+    Array.from({ length: 3 }, () => "A") // start with 3 rows, users can extend to 5 via UI outside if you choose later
+  );
 
-  // Ensure we expose raw subjects back up if you ever want to use them
+  // lock max subjects = 5 as per your note
+  const numSubjects = Math.min(5, subjects.filter(Boolean).length);
+
+  // ---- Derived feature calculations (local) ----
+  const calc = useMemo(() => {
+    const pts = POINTS[grading];
+    const letters = subjects.filter(Boolean).slice(0, 5);
+
+    const weights = letters.map((L) => pts[L] ?? 0);
+    const total = weights.reduce((a, b) => a + b, 0);
+    const avg = weights.length ? total / weights.length : 0;
+
+    const mean = avg;
+    const variance =
+      weights.length > 1
+        ? weights.reduce((s, x) => s + Math.pow(x - mean, 2), 0) /
+          weights.length
+        : 0;
+    const std = Math.sqrt(variance);
+
+    // dominant (mode) weight
+    const freq = new Map();
+    for (const w of weights) freq.set(w, (freq.get(w) || 0) + 1);
+    const dominant =
+      weights.length === 0
+        ? 0
+        : [...freq.entries()].sort((a, b) =>
+            a[1] === b[1] ? b[0] - a[0] : b[1] - a[1]
+          )[0][0];
+
+    const countDist = letters.filter(isDistinction).length;
+    const countWeak = letters.filter(isWeak).length;
+
+    // high school metrics (same formula style you used: average of stdevs; here only A‑level available)
+    const hsVariance = Number((std || 0).toFixed(3));
+    const hsStability = Number(
+      (hsVariance > 0 ? 1 / (1 + hsVariance) : 1).toFixed(3)
+    );
+
+    return {
+      alevel_total_grade_weight: Number(total.toFixed(2)),
+      alevel_average_grade_weight: Number(avg.toFixed(2)),
+      alevel_std_dev_grade_weight: Number(std.toFixed(3)),
+      alevel_dominant_grade_weight: dominant,
+      alevel_count_weak_grades: countWeak,
+      alevel_num_subjects: letters.length,
+      high_school_performance_variance: hsVariance,
+      high_school_performance_stability_index: hsStability,
+    };
+  }, [grading, subjects]);
+
+  // ---- Emit to parent ONLY when derived values actually change ----
+  const lastEmitted = useRef(null);
   useEffect(() => {
-    if (onChange) onChange("_uace_subject_grades", subjects);
-  }, [subjects, onChange]);
+    emitIfChanged(
+      lastEmitted,
+      {
+        // raw passthroughs the model expects
+        uace_year_code: uaceYear,
+        general_paper: gpPass,
 
-  // Derived numbers
-  const cleanSubjects = useMemo(
-    () => subjects.filter((g) => typeof g === "string" && g.length > 0),
-    [subjects]
-  );
+        // derived features
+        ...calc,
+      },
+      onChange
+    );
+  }, [uaceYear, gpPass, calc, onChange]);
 
-  const weights = useMemo(
-    () => toWeights(cleanSubjects, gradingSystem),
-    [cleanSubjects, gradingSystem]
-  );
-
-  const total = useMemo(() => weights.reduce((a, b) => a + b, 0), [weights]);
-  const avg = useMemo(() => mean(weights), [weights]);
-  const sd = useMemo(() => stddev(weights, avg), [weights, avg]);
-  const dom = useMemo(() => dominant(weights), [weights]);
-
-  // Backend-compatible definition:
-  //   distinctions: weight >= 5
-  //   weak grades : weight <= 3
-  const countDistinctions = useMemo(
-    () => weights.filter((w) => w >= 5).length,
-    [weights]
-  );
-  const countWeak = useMemo(
-    () => weights.filter((w) => w <= 3).length,
-    [weights]
-  );
-
-  // Push computed features to parent model fields (keeps your original names)
-  useEffect(() => {
-    onChange?.("alevel_total_grade_weight", total);
-    onChange?.("alevel_average_grade_weight", round(avg, 2));
-    onChange?.("alevel_std_dev_grade_weight", round(sd, 3));
-    onChange?.("alevel_dominant_grade_weight", dom);
-    onChange?.("alevel_count_weak_grades", countWeak);
-
-    // Optional extras (you use these in backend extraction)
-    onChange?.("alevel_num_subjects", cleanSubjects.length);
-    onChange?.("alevel_count_distinctions", countDistinctions);
-  }, [
-    total,
-    avg,
-    sd,
-    dom,
-    countWeak,
-    countDistinctions,
-    cleanSubjects.length,
-    onChange,
-  ]);
-
-  // Progress for user feedback
-  const progress = Math.min(
-    100,
-    Math.round((cleanSubjects.length / MAX_SUBJECTS) * 100)
-  );
-
-  // Field helpers
-  const req = (name) => ({
-    value: data[name] ?? "",
+  // ---- Field helpers ----
+  const req = (name, value) => ({
+    value,
     error:
       touched[name] &&
-      (data[name] === "" ||
-        data[name] === null ||
-        typeof data[name] === "undefined"),
+      (value === "" || value === null || typeof value === "undefined"),
     helperText:
       touched[name] &&
-      (data[name] === "" ||
-        data[name] === null ||
-        typeof data[name] === "undefined")
+      (value === "" || value === null || typeof value === "undefined")
         ? "Required"
         : " ",
   });
 
-  // Handlers
-  const setSubject = (idx, val) => {
-    setSubjects((prev) => {
-      const next = [...prev];
-      next[idx] = val;
-      return next;
-    });
-  };
-
-  const addSubject = () => {
-    if (subjects.length < MAX_SUBJECTS) setSubjects((s) => [...s, ""]);
-  };
-
-  const removeSubject = (idx) => {
-    setSubjects((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const clearSubjects = () => setSubjects(["", "", ""]);
-
   return (
     <div style={{ marginTop: "2rem" }}>
       <Typography variant="h6" gutterBottom>
-        🎓 A‑Level (UACE) Results
+        🎓 A‑Level (UACE) – Subjects & Grading
       </Typography>
 
-      <Typography variant="body2" color="text.secondary" gutterBottom>
-        Enter your <strong>principal subject grades</strong> (A–E, O, F). You
-        can add up to {MAX_SUBJECTS} subjects. The form automatically computes
-        totals and averages for the selected grading system.
-      </Typography>
+      {/* Grading system switch (ordered: 25 → 18 → Competency) */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Choose the grading framework used when you sat UACE.
+        </Typography>
+        <ToggleButtonGroup
+          exclusive
+          value={grading}
+          onChange={(_, v) => v && setGrading(v)}
+          size="small"
+        >
+          <ToggleButton value={GRADING.LEGACY_25}>Legacy (max 25)</ToggleButton>
+          <ToggleButton value={GRADING.CLASSIC_18}>
+            Classic (max 18)
+          </ToggleButton>
+          <ToggleButton value={GRADING.COMPETENCY_60}>
+            Competency (letters)
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
 
-      {/* Grading system selector */}
-      <Grid container spacing={2} alignItems="center" sx={{ mb: 1 }}>
-        <Grid item xs={12} sm="auto">
-          <Typography variant="subtitle2">Grading System</Typography>
-        </Grid>
-        <Grid item xs={12} sm="auto">
-          <ToggleButtonGroup
-            value={gradingSystem}
-            exclusive
-            onChange={(_, val) => val && setGradingSystem(val)}
-            size="small"
-          >
-            <ToggleButton value="18">Old (max 18)</ToggleButton>
-            <ToggleButton value="25">Legacy (max 25)</ToggleButton>
-            <ToggleButton value="60">Modern (max 60)</ToggleButton>
-          </ToggleButtonGroup>
-        </Grid>
-        <Grid item xs>
-          <Tooltip
-            title="We convert letter grades to numeric weights to match the model.
-Distinction=weight ≥ 5, Weak=weight ≤ 3 (aligned to backend logic)."
-          >
-            <InfoOutlinedIcon fontSize="small" color="action" />
-          </Tooltip>
-        </Grid>
-      </Grid>
-
-      {/* Year + GP */}
-      <Grid container spacing={2} sx={{ mb: 1 }}>
+      <Grid container spacing={2}>
+        {/* Year */}
         <Grid item xs={12} sm={6}>
           <TextField
             select
             fullWidth
             label="UACE Year"
-            required
-            {...req("uace_year_code")}
-            onChange={(e) => onChange("uace_year_code", Number(e.target.value))}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Tooltip title="Year when you sat UACE">
-                    <InfoOutlinedIcon fontSize="small" color="action" />
-                  </Tooltip>
-                </InputAdornment>
-              ),
-            }}
+            {...req("uace_year_code", uaceYear)}
+            onChange={(e) => setUaceYear(Number(e.target.value))}
           >
-            {years.map((y) => (
+            {UACE_YEARS.map((y) => (
               <MenuItem key={y} value={y}>
                 {y}
               </MenuItem>
@@ -252,163 +196,92 @@ Distinction=weight ≥ 5, Weak=weight ≤ 3 (aligned to backend logic)."
           </TextField>
         </Grid>
 
+        {/* General Paper */}
         <Grid item xs={12} sm={6}>
           <TextField
             select
             fullWidth
             label="General Paper (Pass?)"
-            value={data.general_paper ?? ""}
-            onChange={(e) => onChange("general_paper", Number(e.target.value))}
-            helperText="GP doesn’t affect principal totals but may be required by some programs."
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Tooltip title="GP/Subsidiaries are considered for eligibility; not added to principal points here.">
-                    <InfoOutlinedIcon fontSize="small" color="action" />
-                  </Tooltip>
-                </InputAdornment>
-              ),
-            }}
+            {...req("general_paper", gpPass)}
+            onChange={(e) => setGpPass(Number(e.target.value))}
+            helperText="Required by many universities."
           >
-            <MenuItem value={1}>Pass</MenuItem>
-            <MenuItem value={0}>Fail / Not Taken</MenuItem>
+            <MenuItem value={1}>Passed</MenuItem>
+            <MenuItem value={0}>Did not pass</MenuItem>
           </TextField>
         </Grid>
-      </Grid>
 
-      {/* Subjects */}
-      <Grid container spacing={2}>
-        {subjects.map((g, idx) => (
-          <Grid item xs={12} sm={6} md={4} key={idx}>
+        {/* Subject letter inputs */}
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Grid item xs={12} sm={6} md={4} key={i}>
             <TextField
               select
               fullWidth
-              label={`Subject ${idx + 1} Grade`}
-              value={g}
-              onChange={(e) => setSubject(idx, e.target.value)}
-              required={idx < MIN_SUBJECTS}
-              helperText={idx < MIN_SUBJECTS ? "Required" : "Optional"}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {subjects.length > MIN_SUBJECTS && (
-                      <Tooltip title="Remove subject">
-                        <IconButton
-                          size="small"
-                          onClick={() => removeSubject(idx)}
-                          aria-label={`Remove subject ${idx + 1}`}
-                        >
-                          <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </InputAdornment>
-                ),
+              label={`Subject ${i + 1} (Letter grade)`}
+              value={subjects[i] ?? ""}
+              onChange={(e) => {
+                const next = [...subjects];
+                next[i] = e.target.value;
+                setSubjects(next);
               }}
             >
-              {GRADE_OPTIONS.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              <MenuItem value="">— not used —</MenuItem>
+              {LETTERS.map((L) => (
+                <MenuItem key={L} value={L}>
+                  {L}
                 </MenuItem>
               ))}
             </TextField>
           </Grid>
         ))}
 
-        {/* Actions */}
-        <Grid
-          item
-          xs={12}
-          sx={{ display: "flex", gap: 1, alignItems: "center" }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={addSubject}
-            disabled={subjects.length >= MAX_SUBJECTS}
-          >
-            Add subject
-          </Button>
-          <Button
-            variant="text"
-            startIcon={<ClearIcon />}
-            onClick={clearSubjects}
-          >
-            Clear all
-          </Button>
-
-          <div style={{ flex: 1 }} />
-
-          {/* Progress */}
-          <div style={{ minWidth: 220 }}>
-            <Typography variant="caption" color="text.secondary">
-              Subjects: {cleanSubjects.length}/{MAX_SUBJECTS}
+        {/* Read‑only computed features (what the model expects) */}
+        <Grid item xs={12}>
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Computed features (sent to the model)
             </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{ mt: 0.5, height: 8, borderRadius: 4 }}
-            />
-          </div>
-        </Grid>
-      </Grid>
-
-      {/* Live computed summary */}
-      <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <TextField
-            label="Total Grade Weight"
-            value={total}
-            fullWidth
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <TextField
-            label="Average Grade Weight"
-            value={round(avg, 2)}
-            fullWidth
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <TextField
-            label="Std. Dev. Grade Weight"
-            value={round(sd, 3)}
-            fullWidth
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <TextField
-            label="Dominant Grade Weight"
-            value={dom}
-            fullWidth
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <TextField
-            label="Distinctions (weight ≥ 5)"
-            value={countDistinctions}
-            fullWidth
-            InputProps={{ readOnly: true }}
-            helperText="Count of A/B (and D if using /60 with weight ≥ 5)."
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <TextField
-            label="Weak Grades (weight ≤ 3)"
-            value={countWeak}
-            fullWidth
-            InputProps={{ readOnly: true }}
-            helperText="e.g., E/O/F depending on system."
-          />
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              <Chip
+                label={`Subjects: ${calc.alevel_num_subjects}`}
+                size="small"
+              />
+              <Chip
+                label={`Total weight: ${calc.alevel_total_grade_weight}`}
+                size="small"
+              />
+              <Chip
+                label={`Average: ${calc.alevel_average_grade_weight}`}
+                size="small"
+              />
+              <Chip
+                label={`Std dev: ${calc.alevel_std_dev_grade_weight}`}
+                size="small"
+              />
+              <Chip
+                label={`Dominant weight: ${calc.alevel_dominant_grade_weight}`}
+                size="small"
+              />
+              <Chip
+                label={`Weak grades: ${calc.alevel_count_weak_grades}`}
+                size="small"
+              />
+              <Chip
+                label={`HS variance: ${calc.high_school_performance_variance}`}
+                size="small"
+              />
+              <Chip
+                label={`Stability idx: ${calc.high_school_performance_stability_index}`}
+                size="small"
+              />
+            </Box>
+            <Typography variant="caption" color="text.secondary">
+              Distinction = A; Weak = D/E/F. Points per letter depend on the
+              selected framework.
+            </Typography>
+          </Paper>
         </Grid>
       </Grid>
     </div>
   );
-};
-
-export default ALevelForm;
+}
