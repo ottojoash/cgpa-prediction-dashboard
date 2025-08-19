@@ -1,0 +1,65 @@
+// src/components/OLevelForm.jsx
+import React from "react";
+import { Grid, TextField, MenuItem, Typography } from "@mui/material";
+const uceYears = Array.from({ length: 25 }, (_, i) => 2005 + i);
+
+const OLevelForm = ({ data, onChange, touched = {} }) => {
+  const req = (name) => ({
+    value: data[name] ?? "",
+    error: touched[name] && (data[name] === "" || data[name] === null),
+    helperText:
+      touched[name] && (data[name] === "" || data[name] === null)
+        ? "Required"
+        : " ",
+  });
+
+  const fields = [
+    ["olevel_subjects", "O-Level Subjects", true],
+    ["uce_distinctions", "UCE Distinctions", true],
+    ["uce_credits", "UCE Credits", true],
+    ["average_olevel_grade", "Average O-Level Grade", true],
+    ["count_weak_grades_olevel", "Count of Weak Grades", true],
+    ["std_dev_olevel_grade", "Std Dev of Grades", true],
+  ];
+
+  return (
+    <>
+      <Typography variant="h6" gutterBottom>
+        📘 O-Level Academic Details
+      </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            fullWidth
+            label="UCE Year"
+            required
+            {...req("uce_year_code")}
+            value={data.uce_year_code || ""}
+            onChange={(e) => onChange("uce_year_code", Number(e.target.value))}
+          >
+            {uceYears.map((year) => (
+              <MenuItem key={year} value={year}>
+                {year}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        {fields.map(([field, label]) => (
+          <Grid item xs={12} sm={6} key={field}>
+            <TextField
+              fullWidth
+              label={label}
+              type="number"
+              required
+              {...req(field)}
+              onChange={(e) => onChange(field, parseFloat(e.target.value))}
+            />
+          </Grid>
+        ))}
+      </Grid>
+    </>
+  );
+};
+
+export default OLevelForm;
