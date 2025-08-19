@@ -1,194 +1,58 @@
 // src/components/OLevelForm.jsx
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Grid,
   TextField,
   MenuItem,
   Typography,
-  ToggleButton,
   ToggleButtonGroup,
-  InputAdornment,
+  ToggleButton,
   Tooltip,
-  IconButton,
+  InputAdornment,
+  LinearProgress,
   Box,
   Chip,
+  Divider,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import ClearIcon from "@mui/icons-material/Clear";
 
-const MIN_SUBJECTS = 6;
-const MAX_SUBJECTS = 10;
+// UCE year options (feel free to adjust the range)
+const thisYear = new Date().getFullYear();
+const uceYears = Array.from({ length: 26 }, (_, i) => thisYear - i); // this year back 25 yrs
 
-// Build UCE year options dynamically (2005 → next year)
-const buildYears = () => {
-  const start = 2005;
-  const end = new Date().getFullYear() + 1;
-  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-};
-const UCE_YEARS = buildYears();
+// Allowed subject bounds
+const MIN_SUBJ = 6;
+const MAX_SUBJ = 10;
 
-/**
- * Letter grading → numeric representative value
- * (Used only when the user chooses "Letters".)
- * Mapping aligns to the 2024 guidance:
- *   A ≈ {D1,D2} → 2.0
- *   B ≈ {C3,C4} → 4.0
- *   C ≈ {C5,C6} → 6.0
- *   D ≈ {P7,P8} → 7.5
- *   E ≈ {E8}    → 8.5
- *   F ≈ {F9}    → 9.0
- */
-const LETTER_TO_NUMERIC = {
-  A: 2,
-  B: 4,
-  C: 6,
-  D: 7.5,
-  E: 8.5,
-  F: 9,
+// ---------- Helpers ----------
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+
+// Build a vector of repeated values from {value:grade, count:n}
+const expand = (pairs) => {
+  const out = [];
+  for (const { value, count } of pairs) {
+    for (let i = 0; i < count; i++) out.push(value);
+  }
+  return out;
 };
 
+const mean = (arr) =>
+  arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+const stddev = (arr, m) => {
+  if (!arr.length) return 0;
+  const v = arr.reduce((sum, x) => sum + Math.pow(x - m, 2), 0) / arr.length;
+  return Math.sqrt(v);
+};
+
+// Mapping for “new” (letter) → representative numeric value for stats
+// (A≈2, B≈4, C≈6, D≈7.5, E≈8.5, F=9)
+const LETTER_TO_NUM = { A: 2, B: 4, C: 6, D: 7.5, E: 8.5, F: 9 };
+
+// ---------- Component ----------
 const OLevelForm = ({ data, onChange, touched = {} }) => {
-  // "numeric" (1–9) is recommended for precise calculations
-  const [gradingMode, setGradingMode] = useState("numeric"); // "numeric" | "letters"
+  const [mode, setMode] = useState("numeric"); // 'numeric' (old) | 'letters' (new)
 
-  // Keep all bucket counts in local UI state, then we derive features -> push to parent
-  const [subjectCount, setSubjectCount] = useState(
-    Number.isFinite(Number(data.olevel_subjects))
-      ? Number(data.olevel_subjects)
-      : ""
-  );
-
-  // Numeric 1..9 counts
-  const [numCounts, setNumCounts] = useState(
-    // default zeros
-    { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 }
-  );
-
-  // Letter counts A..F
-  const [letCounts, setLetCounts] = useState({
-    A: 0,
-    B: 0,
-    C: 0,
-    D: 0,
-    E: 0,
-    F: 0,
-  });
-
-  // ---------------------------
-  // Helpers
-  // ---------------------------
-  const cleanInt = (v) => {
-    const n = Number(v);
-    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
-  };
-
-  const sumValues = (obj) => Object.values(obj).reduce((a, b) => a + b, 0);
-
-  const numericVectorFromUI = useMemo(() => {
-    if (!subjectCount || subjectCount < MIN_SUBJECTS) return [];
-    if (gradingMode === "numeric") {
-      // expand into grades (e.g., {1:2, 2:1} -> [1,1,2])
-      const out = [];
-      Object.entries(numCounts).forEach(([g, c]) => {
-        const grade = Number(g);
-        const count = cleanInt(c);
-        for (let i = 0; i < count; i++) out.push(grade);
-      });
-      return out;
-    } else {
-      const out = [];
-      Object.entries(letCounts).forEach(([L, c]) => {
-        const grade = LETTER_TO_NUMERIC[L]; // representative numeric
-        const count = cleanInt(c);
-        for (let i = 0; i < count; i++) out.push(grade);
-      });
-      return out;
-    }
-  }, [gradingMode, numCounts, letCounts, subjectCount]);
-
-  const totalEntered = useMemo(
-    () =>
-      gradingMode === "numeric" ? sumValues(numCounts) : sumValues(letCounts),
-    [gradingMode, numCounts, letCounts]
-  );
-
-  // Derived metrics exactly as in your Java logic
-  const derived = useMemo(() => {
-    const grades = numericVectorFromUI;
-    const n = grades.length;
-
-    if (
-      !subjectCount ||
-      subjectCount < MIN_SUBJECTS ||
-      subjectCount > MAX_SUBJECTS ||
-      n !== subjectCount
-    ) {
-      return {
-        valid: false,
-        uce_distinctions: "",
-        uce_credits: "",
-        count_weak: "",
-        avg: "",
-        sd: "",
-      };
-    }
-
-    // Distinctions: grade <= 2
-    const distinctions = grades.filter((g) => g <= 2).length;
-
-    // Credits: grades 3..6 inclusive (covers B & C, and numeric C3..C6)
-    const credits = grades.filter((g) => g >= 3 && g <= 6).length;
-
-    // Weak grades: grade >= 6 (C6, 7, 8, 9)
-    const weak = grades.filter((g) => g >= 6).length;
-
-    // Average
-    const sum = grades.reduce((a, b) => a + b, 0);
-    const avg = n ? sum / n : 0;
-
-    // Population standard deviation (same spirit as backend util)
-    const variance =
-      n > 0 ? grades.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / n : 0;
-    const sd = Math.sqrt(variance);
-
-    return {
-      valid: true,
-      uce_distinctions: distinctions,
-      uce_credits: credits,
-      count_weak: weak,
-      avg: Number(avg.toFixed(2)),
-      sd: Number(sd.toFixed(3)),
-    };
-  }, [numericVectorFromUI, subjectCount]);
-
-  // Push derived values to parent (only when valid)
-  useEffect(() => {
-    // year always sync as number if possible
-    if (data.uce_year_code && !Number.isFinite(Number(data.uce_year_code))) {
-      onChange("uce_year_code", "");
-    }
-
-    onChange("olevel_subjects", subjectCount || "");
-
-    if (derived.valid) {
-      onChange("uce_distinctions", derived.uce_distinctions);
-      onChange("uce_credits", derived.uce_credits);
-      onChange("count_weak_grades_olevel", derived.count_weak);
-      onChange("average_olevel_grade", derived.avg);
-      onChange("std_dev_olevel_grade", derived.sd);
-    } else {
-      onChange("uce_distinctions", "");
-      onChange("uce_credits", "");
-      onChange("count_weak_grades_olevel", "");
-      onChange("average_olevel_grade", "");
-      onChange("std_dev_olevel_grade", "");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subjectCount, derived]);
-
-  // ---------------------------
-  // Render
-  // ---------------------------
+  // Core field binding (keeps your original API)
   const req = (name) => ({
     value: data[name] ?? "",
     error: touched[name] && (data[name] === "" || data[name] === null),
@@ -198,26 +62,174 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         : " ",
   });
 
-  const subjectCountError =
-    subjectCount !== "" &&
-    (subjectCount < MIN_SUBJECTS ||
-      subjectCount > MAX_SUBJECTS ||
-      (totalEntered !== 0 && totalEntered !== Number(subjectCount)));
+  // Local counts (we keep them ephemeral; we compute and push derived features up)
+  const [numericCounts, setNumericCounts] = useState({
+    D1: 0,
+    D2: 0,
+    C3: 0,
+    C4: 0,
+    C5: 0,
+    C6: 0,
+    P7: 0,
+    P8: 0,
+    F9: 0,
+  });
 
-  const subjectHelper = !subjectCount
-    ? `Enter number of subjects (${MIN_SUBJECTS}–${MAX_SUBJECTS})`
-    : subjectCountError
-    ? totalEntered !== 0 && totalEntered !== Number(subjectCount)
-      ? `Your grade counts add up to ${totalEntered}, but subjects = ${subjectCount}`
-      : `Subjects must be between ${MIN_SUBJECTS} and ${MAX_SUBJECTS}`
-    : `Great! Now enter how many subjects fall in each grade.`;
+  const [letterCounts, setLetterCounts] = useState({
+    A: 0,
+    B: 0,
+    C: 0,
+    D: 0,
+    E: 0,
+    F: 0,
+  });
+
+  // Subjects entered (we allow user to type freely but clamp 6–10)
+  const subjects = clamp(Number(data.olevel_subjects || 0), MIN_SUBJ, MAX_SUBJ);
+
+  // Totals (depending on active mode)
+  const totalAllocated = useMemo(() => {
+    const src = mode === "numeric" ? numericCounts : letterCounts;
+    return Object.values(src).reduce((a, b) => a + Number(b || 0), 0);
+  }, [mode, numericCounts, letterCounts]);
+
+  const remaining = clamp(subjects - totalAllocated, 0, MAX_SUBJ);
+
+  // --------- Derived features (computed live) ----------
+  const derived = useMemo(() => {
+    // Distinctions / Credits / Weak and stats
+    let distinctions = 0;
+    let credits = 0;
+    let weak = 0;
+    let statsVector = [];
+
+    if (mode === "numeric") {
+      // Numeric exact mapping:
+      // Distinctions: D1 (1), D2 (2)
+      // Credits: C3 (3), C4 (4), C5 (5), C6 (6)
+      // Weak (>=6): C6 (6), P7 (7), P8 (8), F9 (9)
+      const n = numericCounts;
+
+      distinctions = (n.D1 || 0) + (n.D2 || 0);
+      credits = (n.C3 || 0) + (n.C4 || 0) + (n.C5 || 0) + (n.C6 || 0);
+      weak = (n.C6 || 0) + (n.P7 || 0) + (n.P8 || 0) + (n.F9 || 0);
+
+      statsVector = expand([
+        { value: 1, count: n.D1 || 0 },
+        { value: 2, count: n.D2 || 0 },
+        { value: 3, count: n.C3 || 0 },
+        { value: 4, count: n.C4 || 0 },
+        { value: 5, count: n.C5 || 0 },
+        { value: 6, count: n.C6 || 0 },
+        { value: 7, count: n.P7 || 0 },
+        { value: 8, count: n.P8 || 0 },
+        { value: 9, count: n.F9 || 0 },
+      ]);
+    } else {
+      // Letters approximate mapping:
+      // Distinctions: A
+      // Credits: B + C
+      // Weak (>=6): D + E + F
+      const L = letterCounts;
+
+      distinctions = L.A || 0;
+      credits = (L.B || 0) + (L.C || 0);
+      weak = (L.D || 0) + (L.E || 0) + (L.F || 0);
+
+      statsVector = expand([
+        { value: LETTER_TO_NUM.A, count: L.A || 0 },
+        { value: LETTER_TO_NUM.B, count: L.B || 0 },
+        { value: LETTER_TO_NUM.C, count: L.C || 0 },
+        { value: LETTER_TO_NUM.D, count: L.D || 0 },
+        { value: LETTER_TO_NUM.E, count: L.E || 0 },
+        { value: LETTER_TO_NUM.F, count: L.F || 0 },
+      ]);
+    }
+
+    const avg = Number(mean(statsVector).toFixed(2));
+    const sd = Number(stddev(statsVector, mean(statsVector)).toFixed(3));
+
+    return { distinctions, credits, weak, avg, sd };
+  }, [mode, numericCounts, letterCounts]);
+
+  // Push derived values to parent any time inputs change
+  const pushDerived = (next = {}) => {
+    onChange("olevel_subjects", subjects || "");
+    onChange("uce_distinctions", derived.distinctions);
+    onChange("uce_credits", derived.credits);
+    onChange("count_weak_grades_olevel", derived.weak);
+    onChange("average_olevel_grade", derived.avg);
+    onChange("std_dev_olevel_grade", derived.sd);
+    // Optional: also expose how many subjects are “unassigned”
+    if (typeof next === "object") {
+      // noop, just to keep signature flexible
+    }
+  };
+
+  // Update handlers for count inputs (numeric & letters)
+  const updateCount = (group, key, raw) => {
+    // Convert to integer (no leading zero in UI) and clamp to remaining
+    const currentTotal =
+      group === "numeric"
+        ? Object.entries(numericCounts).reduce(
+            (s, [k, v]) => (k === key ? s : s + (v || 0)),
+            0
+          )
+        : Object.entries(letterCounts).reduce(
+            (s, [k, v]) => (k === key ? s : s + (v || 0)),
+            0
+          );
+
+    const maxForField = clamp(subjects - currentTotal, 0, subjects);
+    const value = clamp(Number(raw || 0), 0, maxForField);
+
+    if (group === "numeric") {
+      const next = { ...numericCounts, [key]: value };
+      setNumericCounts(next);
+    } else {
+      const next = { ...letterCounts, [key]: value };
+      setLetterCounts(next);
+    }
+  };
+
+  // Keep parent in sync on every render (cheap) so the model always has latest
+  React.useEffect(() => {
+    pushDerived();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjects, mode, numericCounts, letterCounts]);
+
+  // Fields for the two modes
+  const numericFields = [
+    ["D1", "D1 (Grade 1)"],
+    ["D2", "D2 (Grade 2)"],
+    ["C3", "C3 (Credit 3)"],
+    ["C4", "C4 (Credit 4)"],
+    ["C5", "C5 (Credit 5)"],
+    ["C6", "C6 (Credit 6)"],
+    ["P7", "P7 (Pass 7)"],
+    ["P8", "P8 (Pass 8)"],
+    ["F9", "F9 (Fail 9)"],
+  ];
+
+  const letterFields = [
+    ["A", "A (≈ D1–D2)"],
+    ["B", "B (≈ C3–C4)"],
+    ["C", "C (≈ C5–C6)"],
+    ["D", "D (≈ P7)"],
+    ["E", "E (≈ P8)"],
+    ["F", "F (Fail 9)"],
+  ];
+
+  // Reusable number input props: plain numbers, arrow step 1, min 0, dynamic max
+  const numberInputProps = {
+    inputMode: "numeric",
+    step: 1,
+    min: 0,
+    pattern: "[0-9]*",
+  };
 
   return (
-    <div style={{ marginTop: "2rem" }}>
-      <Typography variant="h6" gutterBottom>
-        📘 O‑Level (UCE) Academic Details
-      </Typography>
-
+    <>
       <Grid container spacing={2}>
         {/* UCE Year */}
         <Grid item xs={12} sm={6}>
@@ -227,226 +239,166 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
             label="UCE Year"
             required
             {...req("uce_year_code")}
-            value={data.uce_year_code ?? ""}
+            value={data.uce_year_code || ""}
             onChange={(e) => onChange("uce_year_code", Number(e.target.value))}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Tooltip title="Year you sat UCE">
-                    <InfoOutlinedIcon fontSize="small" color="action" />
-                  </Tooltip>
-                </InputAdornment>
-              ),
-            }}
+            helperText="Select your UCE sitting year"
           >
-            {UCE_YEARS.map((y) => (
-              <MenuItem key={y} value={y}>
-                {y}
+            {uceYears.map((yr) => (
+              <MenuItem key={yr} value={yr}>
+                {yr}
               </MenuItem>
             ))}
           </TextField>
         </Grid>
 
-        {/* Subjects */}
+        {/* Number of subjects */}
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
-            label="Number of UCE Subjects"
+            label="Number of subjects"
             type="number"
-            value={subjectCount}
-            onChange={(e) =>
-              setSubjectCount(parseInt(e.target.value || "0", 10))
-            }
-            inputProps={{ min: MIN_SUBJECTS, max: MAX_SUBJECTS }}
-            required
-            error={subjectCountError}
-            helperText={subjectHelper}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Tooltip title="Most students have 8–10; minimum accepted is 6.">
-                    <InfoOutlinedIcon fontSize="small" color="action" />
-                  </Tooltip>
-                  {subjectCount ? (
-                    <IconButton
-                      aria-label="Clear subjects"
-                      size="small"
-                      onClick={() => {
-                        setSubjectCount("");
-                        setNumCounts({
-                          1: 0,
-                          2: 0,
-                          3: 0,
-                          4: 0,
-                          5: 0,
-                          6: 0,
-                          7: 0,
-                          8: 0,
-                          9: 0,
-                        });
-                        setLetCounts({ A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 });
-                      }}
-                    >
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  ) : null}
-                </InputAdornment>
-              ),
+            value={subjects || ""}
+            onChange={(e) => {
+              const v = clamp(Number(e.target.value || 0), MIN_SUBJ, MAX_SUBJ);
+              onChange("olevel_subjects", v);
             }}
+            inputProps={{ ...numberInputProps, max: MAX_SUBJ }}
+            helperText={`Enter between ${MIN_SUBJ} and ${MAX_SUBJ} subjects`}
+            required
           />
         </Grid>
 
-        {/* Grading mode */}
+        {/* Mode toggle */}
         <Grid item xs={12}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              flexWrap: "wrap",
+          <ToggleButtonGroup
+            color="primary"
+            value={mode}
+            exclusive
+            onChange={(_, val) => {
+              if (val) setMode(val);
             }}
+            aria-label="grading mode"
           >
-            <Typography variant="subtitle2">Grading style:</Typography>
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={gradingMode}
-              onChange={(_, v) => v && setGradingMode(v)}
-            >
-              <ToggleButton value="numeric">Numeric (1–9)</ToggleButton>
-              <ToggleButton value="letters">Letters (A–F)</ToggleButton>
-            </ToggleButtonGroup>
-            <Tooltip
-              title={
-                gradingMode === "numeric"
-                  ? "Enter how many subjects scored grade 1, 2, … 9."
-                  : "Enter how many subjects scored A, B, C, D, E or F. We use A≈2, B≈4, C≈6, D≈7.5, E≈8.5, F=9 to compute averages."
-              }
-            >
-              <InfoOutlinedIcon fontSize="small" color="action" />
-            </Tooltip>
+            <ToggleButton value="numeric" aria-label="old grading">
+              Numeric (Old grading)
+            </ToggleButton>
+            <ToggleButton value="letters" aria-label="new grading">
+              Alphabetic (New grading)
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Box mt={1} display="flex" alignItems="center" gap={1}>
+            <Box flex={1}>
+              <LinearProgress
+                variant="determinate"
+                value={subjects ? (totalAllocated / subjects) * 100 : 0}
+              />
+            </Box>
             <Chip
               size="small"
+              label={`${totalAllocated}/${subjects} allocated`}
               variant="outlined"
-              label={`Entered: ${totalEntered || 0} / ${subjectCount || 0}`}
             />
+            <Tooltip title="You cannot allocate more grades than the total subjects.">
+              <InfoOutlinedIcon fontSize="small" color="action" />
+            </Tooltip>
           </Box>
         </Grid>
 
-        {/* Buckets */}
-        {gradingMode === "numeric" ? (
-          <>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => (
-              <Grid item xs={12} sm={4} md={3} key={`n-${g}`}>
+        {/* Counts grid */}
+        {(mode === "numeric" ? numericFields : letterFields).map(
+          ([key, label]) => {
+            const src = mode === "numeric" ? numericCounts : letterCounts;
+
+            // Max allowed for this field = remaining + current field value
+            const maxForField = subjects - (totalAllocated - (src[key] || 0));
+
+            return (
+              <Grid item xs={12} sm={4} md={3} key={key}>
                 <TextField
                   fullWidth
-                  label={`Count with Grade ${g}`}
                   type="number"
-                  value={numCounts[g]}
-                  onChange={(e) =>
-                    setNumCounts((s) => ({
-                      ...s,
-                      [g]: cleanInt(e.target.value),
-                    }))
-                  }
-                  inputProps={{ min: 0 }}
+                  label={label}
+                  value={src[key] ?? 0}
+                  onChange={(e) => updateCount(mode, key, e.target.value)}
+                  inputProps={{
+                    ...numberInputProps,
+                    max: clamp(maxForField, 0, subjects),
+                  }}
+                  helperText={`Max: ${clamp(maxForField, 0, subjects)}`}
+                  disabled={subjects === 0 || maxForField === 0}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        {/* spacer */}
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
-            ))}
-          </>
-        ) : (
-          <>
-            {["A", "B", "C", "D", "E", "F"].map((L) => (
-              <Grid item xs={12} sm={4} md={3} key={`l-${L}`}>
-                <TextField
-                  fullWidth
-                  label={`Count with ${L}`}
-                  type="number"
-                  value={letCounts[L]}
-                  onChange={(e) =>
-                    setLetCounts((s) => ({
-                      ...s,
-                      [L]: cleanInt(e.target.value),
-                    }))
-                  }
-                  inputProps={{ min: 0 }}
-                  helperText={
-                    L === "A"
-                      ? "≈ D1 or D2"
-                      : L === "B"
-                      ? "≈ C3 or C4"
-                      : L === "C"
-                      ? "≈ C5 or C6"
-                      : L === "D"
-                      ? "≈ P7 or P8"
-                      : L === "E"
-                      ? "≈ E8"
-                      : "F9"
-                  }
-                />
-              </Grid>
-            ))}
-          </>
+            );
+          }
         )}
 
-        {/* Read‑only derived features (these map 1‑to‑1 with your model fields) */}
+        {/* Divider */}
         <Grid item xs={12}>
-          <Typography variant="subtitle2" gutterBottom>
-            Derived features (auto‑calculated from your entries)
-          </Typography>
+          <Divider />
         </Grid>
 
+        {/* Read‑only derived features shown to user (and pushed to parent) */}
         <Grid item xs={12} sm={4}>
           <TextField
+            label="Distinctions (auto)"
+            value={derived.distinctions}
             fullWidth
-            label="UCE Distinctions (≤ D2 / grade ≤ 2)"
-            value={data.uce_distinctions ?? ""}
             InputProps={{ readOnly: true }}
-            helperText="Calculated from your grade counts"
+            helperText={mode === "numeric" ? "D1 + D2" : "A"}
           />
         </Grid>
 
         <Grid item xs={12} sm={4}>
           <TextField
+            label="Credits (auto)"
+            value={derived.credits}
             fullWidth
-            label="UCE Credits (B–C / grades 3–6)"
-            value={data.uce_credits ?? ""}
             InputProps={{ readOnly: true }}
-            helperText="Calculated from your grade counts"
+            helperText={mode === "numeric" ? "C3 + C4 + C5 + C6" : "B + C"}
           />
         </Grid>
 
         <Grid item xs={12} sm={4}>
           <TextField
+            label="Weak grades (auto)"
+            value={derived.weak}
             fullWidth
-            label="Weak Grades (≥ 6)"
-            value={data.count_weak_grades_olevel ?? ""}
             InputProps={{ readOnly: true }}
-            helperText="Includes C6, 7, 8, 9"
+            helperText={mode === "numeric" ? "C6 + P7 + P8 + F9" : "D + E + F"}
           />
         </Grid>
 
         <Grid item xs={12} sm={6}>
           <TextField
+            label="Average grade (auto)"
+            value={derived.avg}
             fullWidth
-            label="Average O‑Level Grade"
-            value={data.average_olevel_grade ?? ""}
             InputProps={{ readOnly: true }}
-            helperText="Rounded to 2 dp"
+            helperText={
+              mode === "numeric"
+                ? "Exact mean of 1–9 values"
+                : "Approximate using A≈2 … F=9"
+            }
           />
         </Grid>
-
         <Grid item xs={12} sm={6}>
           <TextField
+            label="Std. deviation (auto)"
+            value={derived.sd}
             fullWidth
-            label="Std Dev of O‑Level Grades"
-            value={data.std_dev_olevel_grade ?? ""}
             InputProps={{ readOnly: true }}
-            helperText="Rounded to 3 dp"
+            helperText="Spread of your grades"
           />
         </Grid>
       </Grid>
-    </div>
+    </>
   );
 };
 
