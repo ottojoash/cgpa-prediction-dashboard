@@ -1,46 +1,146 @@
 // src/components/SummarySidebar.jsx
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Paper,
+  Typography,
+  Divider,
   List,
   ListItem,
   ListItemText,
-  Typography,
-  Divider,
+  LinearProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Box,
+  Chip,
+  Stack,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-const Row = ({ label, value }) => (
-  <ListItem dense sx={{ py: 0.5 }}>
+/**
+ * Friendly value formatting for common coded fields
+ */
+const formatValue = (key, value) => {
+  if (value === null || typeof value === "undefined" || value === "")
+    return "—";
+
+  switch (key) {
+    case "gender":
+      // 1 = Male, 0 = Female (your model)
+      return value === 1 ? "Male" : value === 0 ? "Female" : value;
+
+    case "marital_status":
+      // 0 Single, 1 Married, 2 Other
+      return value === 0
+        ? "Single"
+        : value === 1
+        ? "Married"
+        : value === 2
+        ? "Other"
+        : value;
+
+    case "general_paper":
+      return Number(value) === 1 ? "Passed" : "Not passed";
+
+    case "is_national":
+      return Number(value) === 1 ? "National" : "International";
+
+    case "level": {
+      // Sidebar displays the same mapping used in InstitutionalForm (level stored 0‑based)
+      const UI_LEVEL_LABELS = {
+        1: "Certificate / Diploma",
+        2: "Bachelor’s",
+        3: "Master’s",
+        4: "PhD",
+        5: "Short Courses",
+        6: "Postgraduate Diploma",
+        7: "University Bridging Year",
+        8: "Unknown",
+      };
+      const uiVal = Number(value) + 1;
+      return UI_LEVEL_LABELS[uiVal] || `Level ${uiVal}`;
+    }
+
+    default:
+      return value;
+  }
+};
+
+/**
+ * Small row with tighter spacing and soft alternating background
+ */
+const Row = ({ label, value, muted = false }) => (
+  <ListItem
+    dense
+    sx={{
+      py: 0.5,
+      px: 1,
+      borderRadius: 1,
+      "&:nth-of-type(odd)": { backgroundColor: "action.hover" },
+    }}
+  >
     <ListItemText
       primary={
-        <Typography variant="body2" color="text.secondary">
+        <Typography
+          variant="caption"
+          color={muted ? "text.disabled" : "text.secondary"}
+          sx={{ textTransform: "none" }}
+        >
           {label}
         </Typography>
       }
-      secondary={<Typography variant="body1">{value ?? "—"}</Typography>}
+      secondary={
+        <Typography variant="body2" sx={{ mt: 0.25 }}>
+          {value}
+        </Typography>
+      }
     />
   </ListItem>
 );
 
+const Section = ({ title, defaultExpanded = true, children, subtitle }) => (
+  <Accordion
+    defaultExpanded={defaultExpanded}
+    disableGutters
+    sx={{ boxShadow: "none" }}
+  >
+    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Typography variant="overline" sx={{ letterSpacing: 0.6 }}>
+          {title}
+        </Typography>
+        {subtitle ? (
+          <Chip size="small" label={subtitle} variant="outlined" />
+        ) : null}
+      </Stack>
+    </AccordionSummary>
+    <AccordionDetails sx={{ pt: 0 }}>{children}</AccordionDetails>
+  </Accordion>
+);
+
 const SummarySidebar = ({ data }) => {
-  const demog = [
+  // --- Field groups (split raw vs derived for clarity) ---
+  const demogRaw = [
     "marital_status",
     "gender",
     "age_at_entry",
     "year_of_entry_code",
   ];
-  const olevel = [
+
+  const olevelRaw = [
     "uce_year_code",
     "olevel_subjects",
     "uce_distinctions",
     "uce_credits",
+  ];
+  const olevelFeat = [
     "average_olevel_grade",
     "count_weak_grades_olevel",
     "std_dev_olevel_grade",
   ];
-  const alevel = [
-    "uace_year_code",
-    "general_paper",
+
+  const alevelRaw = ["uace_year_code", "general_paper"];
+  const alevelFeat = [
     "alevel_average_grade_weight",
     "alevel_std_dev_grade_weight",
     "alevel_dominant_grade_weight",
@@ -48,7 +148,59 @@ const SummarySidebar = ({ data }) => {
     "high_school_performance_variance",
     "high_school_performance_stability_index",
   ];
-  const inst = ["level", "campus_id_code", "program_id_code", "is_national"];
+
+  const instRaw = ["level", "campus_id_code", "program_id_code", "is_national"];
+
+  // --- Friendly field labels (left column) ---
+  const LABEL = {
+    // Demographics
+    marital_status: "Marital status",
+    gender: "Gender",
+    age_at_entry: "Age at entry",
+    year_of_entry_code: "Year of entry",
+
+    // O‑Level raw
+    uce_year_code: "UCE year",
+    olevel_subjects: "O‑Level subjects (count)",
+    uce_distinctions: "Distinctions (D1–D2 / A)",
+    uce_credits: "Credits (C3–C6 / B/C)",
+
+    // O‑Level features
+    average_olevel_grade: "Avg O‑Level grade",
+    count_weak_grades_olevel: "Weak grades (≥7)",
+    std_dev_olevel_grade: "Std dev (O‑Level)",
+
+    // A‑Level raw
+    uace_year_code: "UACE year",
+    general_paper: "General Paper",
+
+    // A‑Level features
+    alevel_average_grade_weight: "Avg grade weight",
+    alevel_std_dev_grade_weight: "Std dev (A‑Level)",
+    alevel_dominant_grade_weight: "Dominant grade weight",
+    alevel_count_weak_grades: "Weak grades (D/E/F)",
+    high_school_performance_variance: "HS performance variance",
+    high_school_performance_stability_index: "HS stability index",
+
+    // Institutional
+    level: "Academic level",
+    campus_id_code: "Campus (code)",
+    program_id_code: "Program (code)",
+    is_national: "Nationality",
+  };
+
+  // --- Profile completeness (simple: how many from the “important” subset are filled) ---
+  const importantFields = [...demogRaw, ...olevelRaw, ...alevelRaw, ...instRaw];
+  const { filledCount, totalCount } = useMemo(() => {
+    let filled = 0;
+    for (const k of importantFields) {
+      const v = data?.[k];
+      if (!(v === "" || v === null || typeof v === "undefined")) filled += 1;
+    }
+    return { filledCount: filled, totalCount: importantFields.length };
+  }, [data]);
+
+  const percent = Math.round((filledCount / totalCount) * 100);
 
   return (
     <Paper
@@ -58,32 +210,120 @@ const SummarySidebar = ({ data }) => {
         top: 16,
         maxHeight: "calc(100vh - 32px)",
         overflow: "auto",
+        borderRadius: 2,
+        background:
+          "linear-gradient(180deg, rgba(145,158,171,0.10) 0%, rgba(145,158,171,0.05) 100%)",
       }}
     >
-      <Typography variant="subtitle1" sx={{ mb: 1 }}>
-        Quick Review
-      </Typography>
-      <List dense>
-        <Typography variant="overline">Demographics</Typography>
-        {demog.map((k) => (
-          <Row key={k} label={k} value={data[k]} />
-        ))}
-        <Divider sx={{ my: 1.5 }} />
-        <Typography variant="overline">O-Level</Typography>
-        {olevel.map((k) => (
-          <Row key={k} label={k} value={data[k]} />
-        ))}
-        <Divider sx={{ my: 1.5 }} />
-        <Typography variant="overline">A-Level</Typography>
-        {alevel.map((k) => (
-          <Row key={k} label={k} value={data[k]} />
-        ))}
-        <Divider sx={{ my: 1.5 }} />
-        <Typography variant="overline">Institutional</Typography>
-        {inst.map((k) => (
-          <Row key={k} label={k} value={data[k]} />
-        ))}
-      </List>
+      {/* Header + Progress */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ mb: 0.5, fontWeight: 600 }}>
+          Quick Review
+        </Typography>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+          <Typography variant="caption" color="text.secondary">
+            Profile completeness
+          </Typography>
+          <Chip
+            size="small"
+            label={`${filledCount}/${totalCount}`}
+            variant="outlined"
+          />
+        </Stack>
+        <LinearProgress
+          variant="determinate"
+          value={percent}
+          sx={{
+            height: 8,
+            borderRadius: 999,
+            "& .MuiLinearProgress-bar": { borderRadius: 999 },
+          }}
+        />
+      </Box>
+
+      <Divider sx={{ my: 1.5 }} />
+
+      {/* Demographics */}
+      <Section title="Demographics">
+        <List dense disablePadding>
+          {demogRaw.map((k) => (
+            <Row
+              key={k}
+              label={LABEL[k] || k}
+              value={formatValue(k, data?.[k])}
+            />
+          ))}
+        </List>
+      </Section>
+
+      <Divider sx={{ my: 1 }} />
+
+      {/* O‑Level */}
+      <Section title="O‑Level" subtitle="Raw inputs" defaultExpanded={true}>
+        <List dense disablePadding>
+          {olevelRaw.map((k) => (
+            <Row
+              key={k}
+              label={LABEL[k] || k}
+              value={formatValue(k, data?.[k])}
+            />
+          ))}
+        </List>
+      </Section>
+      <Section title="O‑Level (Derived features)" defaultExpanded={false}>
+        <List dense disablePadding>
+          {olevelFeat.map((k) => (
+            <Row
+              key={k}
+              label={LABEL[k] || k}
+              value={formatValue(k, data?.[k])}
+              muted
+            />
+          ))}
+        </List>
+      </Section>
+
+      <Divider sx={{ my: 1 }} />
+
+      {/* A‑Level */}
+      <Section title="A‑Level" subtitle="Raw inputs" defaultExpanded={true}>
+        <List dense disablePadding>
+          {alevelRaw.map((k) => (
+            <Row
+              key={k}
+              label={LABEL[k] || k}
+              value={formatValue(k, data?.[k])}
+            />
+          ))}
+        </List>
+      </Section>
+      <Section title="A‑Level (Derived features)" defaultExpanded={false}>
+        <List dense disablePadding>
+          {alevelFeat.map((k) => (
+            <Row
+              key={k}
+              label={LABEL[k] || k}
+              value={formatValue(k, data?.[k])}
+              muted
+            />
+          ))}
+        </List>
+      </Section>
+
+      <Divider sx={{ my: 1 }} />
+
+      {/* Institutional */}
+      <Section title="Institutional">
+        <List dense disablePadding>
+          {instRaw.map((k) => (
+            <Row
+              key={k}
+              label={LABEL[k] || k}
+              value={formatValue(k, data?.[k])}
+            />
+          ))}
+        </List>
+      </Section>
     </Paper>
   );
 };
