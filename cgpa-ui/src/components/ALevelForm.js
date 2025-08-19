@@ -10,34 +10,43 @@ import {
   Paper,
   Chip,
   Box,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 
 // ---- Grading systems (ordered as requested) ----
 const GRADING = {
-  LEGACY_25: "LEGACY_25", // earliest: max 25 (≈ 9/8/7/6/5)
-  CLASSIC_18: "CLASSIC_18", // popular classic: max 18 (6/5/4/3/2)
-  COMPETENCY_60: "COMPETENCY_60", // current letters; many HEIs map ~ to 20/15/10/5/2
+  LEGACY_25: "LEGACY_25", // earliest: max 25 era (4 principals + GP)
+  CLASSIC_18: "CLASSIC_18", // well-known “18-point” era (3 principals + subsidiaries)
+  COMPETENCY_60: "COMPETENCY_60", // current competency-based; HEIs often map to 60
 };
 
 const LETTERS = ["A", "B", "C", "D", "E", "O", "F"];
 
-// principal points per letter for each system
+// Points per letter for each system (used to compute the features you emit)
 const POINTS = {
   [GRADING.LEGACY_25]: { A: 9, B: 8, C: 7, D: 6, E: 5, O: 1, F: 0 },
   [GRADING.CLASSIC_18]: { A: 6, B: 5, C: 4, D: 3, E: 2, O: 1, F: 0 },
-  // UNEB reports letters; many universities internally use this spread
   [GRADING.COMPETENCY_60]: { A: 20, B: 15, C: 10, D: 5, E: 2, O: 1, F: 0 },
 };
 
-// weak/distinction rules for features (aligns with your extractor)
+// Distinction/weak rules (align with your extractor: Distinction=A; Weak = D/E/F)
 const isDistinction = (letter) => letter === "A";
-const isWeak = (letter) => letter === "D" || letter === "E" || letter === "F"; // ≤ C are strong
+const isWeak = (letter) => letter === "D" || letter === "E" || letter === "F";
 
-// reasonable UACE year range
+// UACE year options (current year back 20)
 const CURRENT_YEAR = new Date().getFullYear();
-const UACE_YEARS = Array.from({ length: 20 }, (_, i) => CURRENT_YEAR - i); // this year back 20
+const UACE_YEARS = Array.from({ length: 20 }, (_, i) => CURRENT_YEAR - i);
 
-// Small helper: shallow compare object values and emit only when changed
+// Subject limits per framework (principals only)
+const SUBJECT_LIMITS = {
+  [GRADING.LEGACY_25]: { min: 4, max: 4 },
+  [GRADING.CLASSIC_18]: { min: 3, max: 3 },
+  [GRADING.COMPETENCY_60]: { min: 2, max: 3 },
+};
+
+// Helper: only emit to parent when values truly changed
 function emitIfChanged(prevRef, next, onChange) {
   const prev = prevRef.current || {};
   let changed = false;
@@ -54,29 +63,58 @@ function emitIfChanged(prevRef, next, onChange) {
 }
 
 export default function ALevelForm({ data, onChange, touched = {} }) {
-  // ---- Local UI state (never write to parent directly) ----
+  // ---- Local UI state ----
   const [grading, setGrading] = useState(GRADING.LEGACY_25);
+
   const [uaceYear, setUaceYear] = useState(
     typeof data.uace_year_code === "number"
       ? data.uace_year_code
       : UACE_YEARS[0]
   );
+
   const [gpPass, setGpPass] = useState(
     typeof data.general_paper === "number" ? data.general_paper : 1
   );
 
-  // Up to 5 principal subjects – Subject 1..5. Store as letters.
-  const [subjects, setSubjects] = useState(
-    Array.from({ length: 3 }, () => "A") // start with 3 rows, users can extend to 5 via UI outside if you choose later
-  );
+  // Principal subject count – fixed by framework except Competency (2–3 selectable)
+  const initialLimits = SUBJECT_LIMITS[grading];
+  const [principalCount, setPrincipalCount] = useState(initialLimits.min);
 
-  // lock max subjects = 5 as per your note
-  const numSubjects = Math.min(5, subjects.filter(Boolean).length);
+  // Letter grades for principals – keep array length >= 3; we’ll slice when rendering
+  const [subjects, setSubjects] = useState(["A", "A", "A"]);
 
-  // ---- Derived feature calculations (local) ----
+  // Sync principalCount when framework changes (respect limits)
+  useEffect(() => {
+    const { min, max } = SUBJECT_LIMITS[grading];
+    setPrincipalCount((prev) => {
+      if (grading === GRADING.COMPETENCY_60) {
+        // clamp previous value to 2–3 on switch
+        return Math.min(max, Math.max(min, prev));
+      }
+      // force fixed count for legacy/classic
+      return min;
+    });
+  }, [grading]);
+
+  // Ensure subjects array has enough slots; trim if too many
+  useEffect(() => {
+    setSubjects((prev) => {
+      let next = [...prev];
+      if (next.length < principalCount) {
+        next = next.concat(
+          Array.from({ length: principalCount - next.length }, () => "")
+        );
+      } else if (next.length > principalCount) {
+        next = next.slice(0, principalCount);
+      }
+      return next;
+    });
+  }, [principalCount]);
+
+  // ---- Derived calculations (principals only) ----
   const calc = useMemo(() => {
     const pts = POINTS[grading];
-    const letters = subjects.filter(Boolean).slice(0, 5);
+    const letters = subjects.slice(0, principalCount).filter((x) => x !== "");
 
     const weights = letters.map((L) => pts[L] ?? 0);
     const total = weights.reduce((a, b) => a + b, 0);
@@ -100,10 +138,9 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
             a[1] === b[1] ? b[0] - a[0] : b[1] - a[1]
           )[0][0];
 
-    const countDist = letters.filter(isDistinction).length;
     const countWeak = letters.filter(isWeak).length;
 
-    // high school metrics (same formula style you used: average of stdevs; here only A‑level available)
+    // Following your variance/stability pattern
     const hsVariance = Number((std || 0).toFixed(3));
     const hsStability = Number(
       (hsVariance > 0 ? 1 / (1 + hsVariance) : 1).toFixed(3)
@@ -119,26 +156,23 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
       high_school_performance_variance: hsVariance,
       high_school_performance_stability_index: hsStability,
     };
-  }, [grading, subjects]);
+  }, [grading, subjects, principalCount]);
 
-  // ---- Emit to parent ONLY when derived values actually change ----
+  // ---- Emit to parent model only when changed ----
   const lastEmitted = useRef(null);
   useEffect(() => {
     emitIfChanged(
       lastEmitted,
       {
-        // raw passthroughs the model expects
         uace_year_code: uaceYear,
         general_paper: gpPass,
-
-        // derived features
         ...calc,
       },
       onChange
     );
   }, [uaceYear, gpPass, calc, onChange]);
 
-  // ---- Field helpers ----
+  // ---- Field helper ----
   const req = (name, value) => ({
     value,
     error:
@@ -151,13 +185,17 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         : " ",
   });
 
+  // UI helpers
+  const isCompetency = grading === GRADING.COMPETENCY_60;
+  const { min: minSubs, max: maxSubs } = SUBJECT_LIMITS[grading];
+
   return (
     <div style={{ marginTop: "2rem" }}>
       <Typography variant="h6" gutterBottom>
         🎓 A‑Level (UACE) – Subjects & Grading
       </Typography>
 
-      {/* Grading system switch (ordered: 25 → 18 → Competency) */}
+      {/* Framework switch (25 → 18 → Competency) */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Choose the grading framework used when you sat UACE.
@@ -185,31 +223,76 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         <Typography variant="body2" color="text.secondary">
           {grading === GRADING.LEGACY_25 && (
             <>
-              <strong>Legacy (Max 25 points):</strong> Older system where an A =
-              9, B = 8, … down to E = 5. Max from 3 principal passes ≈ 25
-              points.
+              <strong>Legacy (Max 25 points):</strong> Typically{" "}
+              <strong>4 principal subjects</strong> are offered (letters A–F),
+              with General Paper taken separately. For model features we map
+              A=9, B=8, C=7, D=6, E=5, O=1, F=0.
             </>
           )}
           {grading === GRADING.CLASSIC_18 && (
             <>
-              <strong>Classic (Max 18 points):</strong> UNEB’s long-standing
-              scale: A = 6, B = 5, C = 4, D = 3, E = 2. Max from 3 principal
-              passes = 18. O = 1 is subsidiary, F = 0 is fail.
+              <strong>Classic (Max 18 points):</strong> Standard era with{" "}
+              <strong>3 principal subjects</strong>. Universities aggregate best
+              three principals out of 18 (A=6, B=5, C=4, D=3, E=2; O=1, F=0).
+              Subsidiaries (GP, Sub-Math/ICT/Bio) are required by policy but not
+              included in this model’s principal-weight features.
             </>
           )}
           {grading === GRADING.COMPETENCY_60 && (
             <>
-              <strong>Competency-Based (Max 60 points):</strong> Current
-              curriculum (from 2025). Still A–F letters, but universities map
-              them more widely (A ≈ 20, B ≈ 15, C ≈ 10, D ≈ 5, E ≈ 2). Top 3
-              passes ≈ 60.
+              <strong>Competency‑Based (Current):</strong> Offer{" "}
+              <strong>2–3 principal subjects</strong>, with compulsory core
+              (e.g., GP, Sub‑ICT). For this model we use a wider internal
+              mapping: A≈20, B≈15, C≈10, D≈5, E≈2; O=1, F=0.
             </>
           )}
         </Typography>
       </Box>
 
+      {/* Principal subject count (only adjustable for Competency) */}
+      <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center" }}>
+        <FormControl size="small" sx={{ width: 240 }}>
+          <InputLabel id="principal-count-label">
+            Number of principal subjects
+          </InputLabel>
+          <Select
+            labelId="principal-count-label"
+            label="Number of principal subjects"
+            value={principalCount}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              // clamp to limits just in case
+              const clamped = Math.min(maxSubs, Math.max(minSubs, val));
+              setPrincipalCount(clamped);
+            }}
+            disabled={!isCompetency}
+          >
+            {Array.from(
+              { length: maxSubs - minSubs + 1 },
+              (_, i) => minSubs + i
+            ).map((n) => (
+              <MenuItem key={n} value={n}>
+                {n} principal{n > 1 ? "s" : ""}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <Chip
+          size="small"
+          variant="outlined"
+          label={
+            grading === GRADING.LEGACY_25
+              ? "Framework: 4 principals (+GP)"
+              : grading === GRADING.CLASSIC_18
+              ? "Framework: 3 principals (+subs)"
+              : "Framework: 2–3 principals (+core)"
+          }
+        />
+      </Box>
+
       <Grid container spacing={2}>
-        {/* Year */}
+        {/* UACE Year */}
         <Grid item xs={12} sm={6}>
           <TextField
             select
@@ -234,15 +317,15 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
             label="General Paper (Pass?)"
             {...req("general_paper", gpPass)}
             onChange={(e) => setGpPass(Number(e.target.value))}
-            helperText="Required by many universities."
+            helperText="Often required for admission; not part of principal-weight totals."
           >
             <MenuItem value={1}>Passed</MenuItem>
             <MenuItem value={0}>Did not pass</MenuItem>
           </TextField>
         </Grid>
 
-        {/* Subject letter inputs */}
-        {Array.from({ length: 5 }).map((_, i) => (
+        {/* Principal subject letter inputs (render exactly principalCount) */}
+        {Array.from({ length: principalCount }).map((_, i) => (
           <Grid item xs={12} sm={6} md={4} key={i}>
             <TextField
               select
@@ -255,7 +338,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
                 setSubjects(next);
               }}
             >
-              <MenuItem value="">— not used —</MenuItem>
+              <MenuItem value="">— select —</MenuItem>
               {LETTERS.map((L) => (
                 <MenuItem key={L} value={L}>
                   {L}
@@ -273,7 +356,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               <Chip
-                label={`Subjects: ${calc.alevel_num_subjects}`}
+                label={`Principals: ${calc.alevel_num_subjects}`}
                 size="small"
               />
               <Chip
@@ -307,7 +390,8 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
             </Box>
             <Typography variant="caption" color="text.secondary">
               Distinction = A; Weak = D/E/F. Points per letter depend on the
-              selected framework.
+              selected framework. (Subsidiaries like GP/Sub‑ICT aren’t included
+              in these principal‑weight features.)
             </Typography>
           </Paper>
         </Grid>
