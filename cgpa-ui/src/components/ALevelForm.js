@@ -14,9 +14,6 @@ const ALevelForm = ({ data, onChange, touched = {} }) => {
 
   return (
     <div style={{ marginTop: "2rem" }}>
-      <Typography variant="h6" gutterBottom>
-        🏫 A-Level (UACE) Information
-      </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
