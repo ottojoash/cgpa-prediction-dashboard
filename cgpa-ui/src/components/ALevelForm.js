@@ -13,6 +13,8 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Divider,
+  LinearProgress,
 } from "@mui/material";
 
 // ---- Grading systems (ordered as requested) ----
@@ -189,14 +191,70 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
   const isCompetency = grading === GRADING.COMPETENCY_60;
   const { min: minSubs, max: maxSubs } = SUBJECT_LIMITS[grading];
 
+  // ---- Progress (purely visual) ----
+  const filledSubjects = subjects
+    .slice(0, principalCount)
+    .filter(Boolean).length;
+  const totalRequired = principalCount + 2; // principals + (Year + GP)
+  const completed =
+    filledSubjects +
+    (uaceYear ? 1 : 0) +
+    (gpPass === 0 || gpPass === 1 ? 1 : 0);
+  const progress = Math.round((completed / totalRequired) * 100);
+
   return (
-    <div style={{ marginTop: "2rem" }}>
-      <Typography variant="h6" gutterBottom>
-        🎓 A‑Level (UACE) – Subjects & Grading
-      </Typography>
+    <Box sx={{ mt: 4 }}>
+      {/* Header card */}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 3,
+          mb: 3,
+          borderRadius: 3,
+          bgcolor: "background.paper",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="h6" gutterBottom>
+          🎓 A‑Level (UACE) – Subjects & Grading
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Select the grading era you used, enter your UACE year and General
+          Paper result, then choose letter grades for your principal subjects.
+          We’ll compute the model features for you automatically—no extra math
+          needed.
+        </Typography>
+
+        <Box sx={{ mt: 2 }}>
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{ height: 8, borderRadius: 5 }}
+          />
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mt: 0.5 }}
+          >
+            Form completion: {progress}%
+          </Typography>
+        </Box>
+      </Paper>
 
       {/* Framework switch (25 → 18 → Competency) */}
-      <Box sx={{ mb: 2 }}>
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2.5,
+          mb: 3,
+          borderRadius: 3,
+          bgcolor: "background.default",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="subtitle1" gutterBottom>
+          Grading framework
+        </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Choose the grading framework used when you sat UACE.
         </Typography>
@@ -205,197 +263,228 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
           value={grading}
           onChange={(_, v) => v && setGrading(v)}
           size="small"
+          sx={{ flexWrap: "wrap", gap: 1 }}
         >
-          <ToggleButton value={GRADING.LEGACY_25}>
-            Legacy (max 25 Pts)
-          </ToggleButton>
+          <ToggleButton value={GRADING.LEGACY_25}>Legacy (25 pts)</ToggleButton>
           <ToggleButton value={GRADING.CLASSIC_18}>
-            Classic (max 18 Pts)
+            Classic (18 pts)
           </ToggleButton>
           <ToggleButton value={GRADING.COMPETENCY_60}>
-            Competency Based (max 60 Pts)
+            Competency (≈60 pts)
           </ToggleButton>
         </ToggleButtonGroup>
-      </Box>
 
-      {/* Grading system description */}
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          {grading === GRADING.LEGACY_25 && (
-            <>
-              <strong>Legacy (Max 25 points):</strong> Typically{" "}
-              <strong>4 principal subjects</strong> are offered (letters A–F),
-              with General Paper taken separately. For model features we map
-              A=9, B=8, C=7, D=6, E=5, O=1, F=0.
-            </>
-          )}
-          {grading === GRADING.CLASSIC_18 && (
-            <>
-              <strong>Classic (Max 18 points):</strong> Standard era with{" "}
-              <strong>3 principal subjects</strong>. Universities aggregate best
-              three principals out of 18 (A=6, B=5, C=4, D=3, E=2; O=1, F=0).
-              Subsidiaries (GP, Sub-Math/ICT/Bio) are required by policy but not
-              included in this model’s principal-weight features.
-            </>
-          )}
-          {grading === GRADING.COMPETENCY_60 && (
-            <>
-              <strong>Competency‑Based (Current):</strong> Offer{" "}
-              <strong>2–3 principal subjects</strong>, with compulsory core
-              (e.g., GP, Sub‑ICT). For this model we use a wider internal
-              mapping: A≈20, B≈15, C≈10, D≈5, E≈2; O=1, F=0.
-            </>
-          )}
+        <Box
+          sx={{
+            mt: 2,
+            p: 2,
+            borderRadius: 2,
+            bgcolor: "action.hover",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            {grading === GRADING.LEGACY_25 && (
+              <>
+                <strong>Legacy (Max 25 points):</strong> Typically{" "}
+                <strong>4 principal subjects</strong> were offered (letters
+                A–F), with General Paper taken separately. For model features we
+                map A=9, B=8, C=7, D=6, E=5, O=1, F=0.
+              </>
+            )}
+            {grading === GRADING.CLASSIC_18 && (
+              <>
+                <strong>Classic (Max 18 points):</strong> Standard era with{" "}
+                <strong>3 principal subjects</strong>. Universities aggregate
+                best three principals out of 18 (A=6, B=5, C=4, D=3, E=2; O=1,
+                F=0). Subsidiaries (GP, Sub‑Math/ICT/Bio) are policy
+                requirements but not counted in the principal‑weight features
+                here.
+              </>
+            )}
+            {grading === GRADING.COMPETENCY_60 && (
+              <>
+                <strong>Competency‑Based (Current):</strong> Offer{" "}
+                <strong>2–3 principal subjects</strong> plus compulsory core
+                (e.g., GP, Sub‑ICT). For this model we use a broader internal
+                mapping: A≈20, B≈15, C≈10, D≈5, E≈2; O=1, F=0.
+              </>
+            )}
+          </Typography>
+        </Box>
+
+        <Box sx={{ mt: 2, display: "flex", gap: 2, alignItems: "center" }}>
+          <FormControl size="small" sx={{ width: 280 }}>
+            <InputLabel id="principal-count-label">
+              Number of principal subjects
+            </InputLabel>
+            <Select
+              labelId="principal-count-label"
+              label="Number of principal subjects"
+              value={principalCount}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                const clamped = Math.min(maxSubs, Math.max(minSubs, val));
+                setPrincipalCount(clamped);
+              }}
+              disabled={grading !== GRADING.COMPETENCY_60}
+            >
+              {Array.from(
+                { length: maxSubs - minSubs + 1 },
+                (_, i) => minSubs + i
+              ).map((n) => (
+                <MenuItem key={n} value={n}>
+                  {n} principal{n > 1 ? "s" : ""}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Chip
+            size="small"
+            variant="outlined"
+            label={
+              grading === GRADING.LEGACY_25
+                ? "Framework: 4 principals (+GP)"
+                : grading === GRADING.CLASSIC_18
+                ? "Framework: 3 principals (+subs)"
+                : "Framework: 2–3 principals (+core)"
+            }
+          />
+        </Box>
+      </Paper>
+
+      {/* Inputs */}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 3,
+          mb: 3,
+          borderRadius: 3,
+          bgcolor: "background.paper",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="subtitle1" gutterBottom>
+          Enter your details
         </Typography>
-      </Box>
-
-      {/* Principal subject count (only adjustable for Competency) */}
-      <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center" }}>
-        <FormControl size="small" sx={{ width: 240 }}>
-          <InputLabel id="principal-count-label">
-            Number of principal subjects
-          </InputLabel>
-          <Select
-            labelId="principal-count-label"
-            label="Number of principal subjects"
-            value={principalCount}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              // clamp to limits just in case
-              const clamped = Math.min(maxSubs, Math.max(minSubs, val));
-              setPrincipalCount(clamped);
-            }}
-            disabled={!isCompetency}
-          >
-            {Array.from(
-              { length: maxSubs - minSubs + 1 },
-              (_, i) => minSubs + i
-            ).map((n) => (
-              <MenuItem key={n} value={n}>
-                {n} principal{n > 1 ? "s" : ""}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Chip
-          size="small"
-          variant="outlined"
-          label={
-            grading === GRADING.LEGACY_25
-              ? "Framework: 4 principals (+GP)"
-              : grading === GRADING.CLASSIC_18
-              ? "Framework: 3 principals (+subs)"
-              : "Framework: 2–3 principals (+core)"
-          }
-        />
-      </Box>
-
-      <Grid container spacing={2}>
-        {/* UACE Year */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            fullWidth
-            label="UACE Year"
-            {...req("uace_year_code", uaceYear)}
-            onChange={(e) => setUaceYear(Number(e.target.value))}
-          >
-            {UACE_YEARS.map((y) => (
-              <MenuItem key={y} value={y}>
-                {y}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-
-        {/* General Paper */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            fullWidth
-            label="General Paper (Pass?)"
-            {...req("general_paper", gpPass)}
-            onChange={(e) => setGpPass(Number(e.target.value))}
-            helperText="Often required for admission; not part of principal-weight totals."
-          >
-            <MenuItem value={1}>Passed</MenuItem>
-            <MenuItem value={0}>Did not pass</MenuItem>
-          </TextField>
-        </Grid>
-
-        {/* Principal subject letter inputs (render exactly principalCount) */}
-        {Array.from({ length: principalCount }).map((_, i) => (
-          <Grid item xs={12} sm={6} md={4} key={i}>
+        <Grid container spacing={2.5}>
+          {/* UACE Year */}
+          <Grid item xs={12} sm={6}>
             <TextField
               select
               fullWidth
-              label={`Subject ${i + 1} (Letter grade)`}
-              value={subjects[i] ?? ""}
-              onChange={(e) => {
-                const next = [...subjects];
-                next[i] = e.target.value;
-                setSubjects(next);
-              }}
+              label="UACE Year"
+              {...req("uace_year_code", uaceYear)}
+              onChange={(e) => setUaceYear(Number(e.target.value))}
             >
-              <MenuItem value="">— select —</MenuItem>
-              {LETTERS.map((L) => (
-                <MenuItem key={L} value={L}>
-                  {L}
+              {UACE_YEARS.map((y) => (
+                <MenuItem key={y} value={y}>
+                  {y}
                 </MenuItem>
               ))}
             </TextField>
           </Grid>
-        ))}
 
-        {/* Read‑only computed features (what the model expects) */}
-        <Grid item xs={12}>
-          <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Computed features (sent to the model)
-            </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              <Chip
-                label={`Principals: ${calc.alevel_num_subjects}`}
-                size="small"
-              />
-              <Chip
-                label={`Total weight: ${calc.alevel_total_grade_weight}`}
-                size="small"
-              />
-              <Chip
-                label={`Average: ${calc.alevel_average_grade_weight}`}
-                size="small"
-              />
-              <Chip
-                label={`Std dev: ${calc.alevel_std_dev_grade_weight}`}
-                size="small"
-              />
-              <Chip
-                label={`Dominant weight: ${calc.alevel_dominant_grade_weight}`}
-                size="small"
-              />
-              <Chip
-                label={`Weak grades: ${calc.alevel_count_weak_grades}`}
-                size="small"
-              />
-              <Chip
-                label={`HS variance: ${calc.high_school_performance_variance}`}
-                size="small"
-              />
-              <Chip
-                label={`Stability idx: ${calc.high_school_performance_stability_index}`}
-                size="small"
-              />
-            </Box>
-            <Typography variant="caption" color="text.secondary">
-              Distinction = A; Weak = D/E/F. Points per letter depend on the
-              selected framework. (Subsidiaries like GP/Sub‑ICT aren’t included
-              in these principal‑weight features.)
-            </Typography>
-          </Paper>
+          {/* General Paper */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              select
+              fullWidth
+              label="General Paper (Pass?)"
+              {...req("general_paper", gpPass)}
+              onChange={(e) => setGpPass(Number(e.target.value))}
+              helperText="Often required for admission; not part of principal‑weight totals."
+            >
+              <MenuItem value={1}>Passed</MenuItem>
+              <MenuItem value={0}>Did not pass</MenuItem>
+            </TextField>
+          </Grid>
+
+          {/* Principal subject letter inputs (render exactly principalCount) */}
+          {Array.from({ length: principalCount }).map((_, i) => (
+            <Grid item xs={12} sm={6} md={4} key={i}>
+              <TextField
+                select
+                fullWidth
+                label={`Subject ${i + 1} (Letter grade)`}
+                value={subjects[i] ?? ""}
+                onChange={(e) => {
+                  const next = [...subjects];
+                  next[i] = e.target.value;
+                  setSubjects(next);
+                }}
+                helperText="Choose A, B, C, D, E, O or F"
+              >
+                <MenuItem value="">— select —</MenuItem>
+                {LETTERS.map((L) => (
+                  <MenuItem key={L} value={L}>
+                    {L}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+          ))}
         </Grid>
-      </Grid>
-    </div>
+      </Paper>
+
+      {/* Computed features (read‑only) */}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2.5,
+          borderRadius: 3,
+          bgcolor: "action.hover",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="subtitle1" gutterBottom>
+          Computed features (sent to the model)
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <Chip
+            label={`Principals: ${calc.alevel_num_subjects}`}
+            size="small"
+          />
+          <Chip
+            label={`Total weight: ${calc.alevel_total_grade_weight}`}
+            size="small"
+          />
+          <Chip
+            label={`Average: ${calc.alevel_average_grade_weight}`}
+            size="small"
+          />
+          <Chip
+            label={`Std dev: ${calc.alevel_std_dev_grade_weight}`}
+            size="small"
+          />
+          <Chip
+            label={`Dominant weight: ${calc.alevel_dominant_grade_weight}`}
+            size="small"
+          />
+          <Chip
+            label={`Weak grades: ${calc.alevel_count_weak_grades}`}
+            size="small"
+          />
+          <Chip
+            label={`HS variance: ${calc.high_school_performance_variance}`}
+            size="small"
+          />
+          <Chip
+            label={`Stability idx: ${calc.high_school_performance_stability_index}`}
+            size="small"
+          />
+        </Box>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: "block", mt: 1 }}
+        >
+          Distinction = A; Weak = D/E/F. Points per letter depend on the
+          selected framework. (Subsidiaries like GP/Sub‑ICT aren’t included in
+          these principal‑weight features.)
+        </Typography>
+      </Paper>
+    </Box>
   );
 }
