@@ -215,8 +215,8 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
           borderColor: "divider",
         }}
       >
-        <Typography variant="h6" gutterBottom>
-          🎓 A‑Level (UACE) – Subjects & Grading
+        <Typography variant="h7" gutterBottom>
+          Subjects & Grading
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Select the grading era you used, enter your UACE year and General
