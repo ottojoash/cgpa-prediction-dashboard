@@ -168,14 +168,44 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
           onChange={(_, v) => v && setGrading(v)}
           size="small"
         >
-          <ToggleButton value={GRADING.LEGACY_25}>Legacy (max 25)</ToggleButton>
+          <ToggleButton value={GRADING.LEGACY_25}>
+            Legacy (max 25 Pts)
+          </ToggleButton>
           <ToggleButton value={GRADING.CLASSIC_18}>
-            Classic (max 18)
+            Classic (max 18 Pts)
           </ToggleButton>
           <ToggleButton value={GRADING.COMPETENCY_60}>
-            Competency (letters)
+            Competency Based (max 60 Pts)
           </ToggleButton>
         </ToggleButtonGroup>
+      </Box>
+
+      {/* Grading system description */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          {grading === GRADING.LEGACY_25 && (
+            <>
+              <strong>Legacy (Max 25 points):</strong> Older system where an A =
+              9, B = 8, … down to E = 5. Max from 3 principal passes ≈ 25
+              points.
+            </>
+          )}
+          {grading === GRADING.CLASSIC_18 && (
+            <>
+              <strong>Classic (Max 18 points):</strong> UNEB’s long-standing
+              scale: A = 6, B = 5, C = 4, D = 3, E = 2. Max from 3 principal
+              passes = 18. O = 1 is subsidiary, F = 0 is fail.
+            </>
+          )}
+          {grading === GRADING.COMPETENCY_60 && (
+            <>
+              <strong>Competency-Based (Max 60 points):</strong> Current
+              curriculum (from 2025). Still A–F letters, but universities map
+              them more widely (A ≈ 20, B ≈ 15, C ≈ 10, D ≈ 5, E ≈ 2). Top 3
+              passes ≈ 60.
+            </>
+          )}
+        </Typography>
       </Box>
 
       <Grid container spacing={2}>
