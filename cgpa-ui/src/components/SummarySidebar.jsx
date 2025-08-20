@@ -1,5 +1,5 @@
 // src/components/SummarySidebar.jsx
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Paper,
   Typography,
@@ -98,25 +98,37 @@ const Row = ({ label, value, muted = false }) => (
   </ListItem>
 );
 
-const Section = ({ title, defaultExpanded = true, children, subtitle }) => (
-  <Accordion
-    defaultExpanded={defaultExpanded}
-    disableGutters
-    sx={{ boxShadow: "none" }}
-  >
-    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Typography variant="overline" sx={{ letterSpacing: 0.6 }}>
-          {title}
-        </Typography>
-        {subtitle ? (
-          <Chip size="small" label={subtitle} variant="outlined" />
-        ) : null}
-      </Stack>
-    </AccordionSummary>
-    <AccordionDetails sx={{ pt: 0 }}>{children}</AccordionDetails>
-  </Accordion>
-);
+const ControlledSection = ({
+  id,
+  title,
+  subtitle,
+  expandedId,
+  setExpandedId,
+  children,
+}) => {
+  const expanded = expandedId === id;
+  return (
+    <Accordion
+      disableGutters
+      elevation={0}
+      expanded={expanded}
+      onChange={(_, isExp) => setExpandedId(isExp ? id : null)}
+      sx={{ boxShadow: "none" }}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="overline" sx={{ letterSpacing: 0.6 }}>
+            {title}
+          </Typography>
+          {subtitle ? (
+            <Chip size="small" label={subtitle} variant="outlined" />
+          ) : null}
+        </Stack>
+      </AccordionSummary>
+      <AccordionDetails sx={{ pt: 0 }}>{children}</AccordionDetails>
+    </Accordion>
+  );
+};
 
 const SummarySidebar = ({ data }) => {
   // --- Field groups (split raw vs derived for clarity) ---
@@ -199,8 +211,26 @@ const SummarySidebar = ({ data }) => {
     }
     return { filledCount: filled, totalCount: importantFields.length };
   }, [data]);
-
   const percent = Math.round((filledCount / totalCount) * 100);
+
+  // --- Single‑expand accordion control ---
+  const SECTION_ORDER = [
+    "demographics",
+    "olevel_raw",
+    "olevel_feat",
+    "alevel_raw",
+    "alevel_feat",
+    "institutional",
+  ];
+  const [expandedId, setExpandedId] = useState(SECTION_ORDER[0]);
+
+  // Safety: if expandedId somehow becomes unknown (e.g., future edits), reset to first
+  useEffect(() => {
+    if (!SECTION_ORDER.includes(expandedId)) {
+      setExpandedId(SECTION_ORDER[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedId]);
 
   return (
     <Paper
@@ -244,7 +274,12 @@ const SummarySidebar = ({ data }) => {
       <Divider sx={{ my: 1.5 }} />
 
       {/* Demographics */}
-      <Section title="Demographics">
+      <ControlledSection
+        id="demographics"
+        title="Demographics"
+        expandedId={expandedId}
+        setExpandedId={setExpandedId}
+      >
         <List dense disablePadding>
           {demogRaw.map((k) => (
             <Row
@@ -254,12 +289,18 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </Section>
+      </ControlledSection>
 
       <Divider sx={{ my: 1 }} />
 
       {/* O‑Level */}
-      <Section title="O‑Level" subtitle="Raw inputs" defaultExpanded={true}>
+      <ControlledSection
+        id="olevel_raw"
+        title="O‑Level"
+        subtitle="Raw inputs"
+        expandedId={expandedId}
+        setExpandedId={setExpandedId}
+      >
         <List dense disablePadding>
           {olevelRaw.map((k) => (
             <Row
@@ -269,8 +310,14 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </Section>
-      <Section title="O‑Level (Derived features)" defaultExpanded={false}>
+      </ControlledSection>
+
+      <ControlledSection
+        id="olevel_feat"
+        title="O‑Level (Derived features)"
+        expandedId={expandedId}
+        setExpandedId={setExpandedId}
+      >
         <List dense disablePadding>
           {olevelFeat.map((k) => (
             <Row
@@ -281,12 +328,18 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </Section>
+      </ControlledSection>
 
       <Divider sx={{ my: 1 }} />
 
       {/* A‑Level */}
-      <Section title="A‑Level" subtitle="Raw inputs" defaultExpanded={true}>
+      <ControlledSection
+        id="alevel_raw"
+        title="A‑Level"
+        subtitle="Raw inputs"
+        expandedId={expandedId}
+        setExpandedId={setExpandedId}
+      >
         <List dense disablePadding>
           {alevelRaw.map((k) => (
             <Row
@@ -296,8 +349,14 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </Section>
-      <Section title="A‑Level (Derived features)" defaultExpanded={false}>
+      </ControlledSection>
+
+      <ControlledSection
+        id="alevel_feat"
+        title="A‑Level (Derived features)"
+        expandedId={expandedId}
+        setExpandedId={setExpandedId}
+      >
         <List dense disablePadding>
           {alevelFeat.map((k) => (
             <Row
@@ -308,12 +367,17 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </Section>
+      </ControlledSection>
 
       <Divider sx={{ my: 1 }} />
 
       {/* Institutional */}
-      <Section title="Institutional">
+      <ControlledSection
+        id="institutional"
+        title="Institutional"
+        expandedId={expandedId}
+        setExpandedId={setExpandedId}
+      >
         <List dense disablePadding>
           {instRaw.map((k) => (
             <Row
@@ -323,7 +387,7 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </Section>
+      </ControlledSection>
     </Paper>
   );
 };
