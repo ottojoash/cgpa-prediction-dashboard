@@ -229,7 +229,7 @@ const DemographicsForm = ({ data, onChange, touched = {} }) => {
               helperText={
                 field("year_of_entry_code").error
                   ? field("year_of_entry_code").helperText
-                  : `Choose between ${DATASET_MIN_YEAR} and ${maxYear}`
+                  : `Between ${DATASET_MIN_YEAR} and ${maxYear} of entry to University`
               }
               InputProps={{
                 endAdornment: (
