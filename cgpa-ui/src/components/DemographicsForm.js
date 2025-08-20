@@ -76,13 +76,10 @@ const DemographicsForm = ({ data, onChange, touched = {} }) => {
 
   return (
     <>
-      <Typography variant="h6" gutterBottom>
-        Demographic Details
-      </Typography>
-
       <Typography variant="body2" color="text.secondary" gutterBottom>
         We use these details for prediction and reporting. They won’t restrict
         your program options.
+        <br /> 
       </Typography>
 
       <Grid container spacing={2}>
