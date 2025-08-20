@@ -1,5 +1,5 @@
 // src/App.js
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 import {
   Container,
@@ -25,8 +25,18 @@ import SummarySidebar from "./components/SummarySidebar";
 
 const steps = ["Demographics", "O-Level", "A-Level", "Institutional", "Review"];
 
+// Map step index <-> sidebar section key (must match SummarySidebar’s internal keys)
+const stepToSection = ["demographics", "olevel", "alevel", "institutional"];
+const sectionToStep = {
+  demographics: 0,
+  olevel: 1,
+  alevel: 2,
+  institutional: 3,
+};
+
 function App() {
   const [activeStep, setActiveStep] = useState(0);
+
   const [formData, setFormData] = useState({
     age_at_entry: "",
     marital_status: "",
@@ -57,6 +67,11 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  // Smoothly scroll to top on step change (keeps users oriented)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeStep]);
 
   const handleFormChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -145,8 +160,7 @@ function App() {
         <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
           {steps.map((label) => (
             <Step key={label}>
-              {" "}
-              <StepLabel>{label}</StepLabel>{" "}
+              <StepLabel>{label}</StepLabel>
             </Step>
           ))}
         </Stepper>
@@ -238,7 +252,7 @@ function App() {
                     severity="success"
                     sx={{ mt: 2, backgroundColor: "#172a22", color: "#00ff95" }}
                   >
-                    🤖 <strong>Predicted CGPA:</strong> {result.predicted_cgpa}{" "}
+                    🤖 <strong>Predicted CGPA:</strong> {result.predicted_cgpa}
                     <br />
                     🧠 <strong>Performance Band:</strong>{" "}
                     {result.performance_band}
@@ -290,9 +304,18 @@ function App() {
             )}
           </Grid>
 
-          {/* Right sidebar */}
+          {/* Right sidebar (now synced with the current step) */}
           <Grid item xs={12} md={4}>
-            <SummarySidebar data={formData} />
+            <SummarySidebar
+              data={formData}
+              selectedSection={stepToSection[activeStep] || null}
+              onSectionChange={(sectionKey) => {
+                const idx = sectionToStep[sectionKey];
+                if (typeof idx === "number") {
+                  setActiveStep(idx);
+                }
+              }}
+            />
           </Grid>
         </Grid>
       </Container>
