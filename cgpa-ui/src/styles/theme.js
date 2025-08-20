@@ -27,21 +27,26 @@ const theme = createTheme({
       styleOverrides: { root: { fontSize: 14 } },
     },
 
-    // NEW: ensure TextField select has space for endAdornment icons
+    /**
+     * Make Selects play nicely with endAdornment (Clear / Info icons)
+     * 1) Add base extra space on the right so text never runs under icons
+     * 2) When the input has an endAdornment, add even more space
+     * 3) Move the default caret (▼) left accordingly
+     */
     MuiSelect: {
       styleOverrides: {
         select: {
-          // Add extra room on the right so text & caret don't collide with custom icons
-          paddingRight: 48, // ~ theme.spacing(6)
+          // Base extra space (even without adornment)
+          paddingRight: 48, // ≈ theme.spacing(6)
         },
         icon: {
-          // Nudge the default arrow left so it doesn't overlap your endAdornment
-          right: 40, // px; adjust if you add multiple icons
+          right: 40, // keep the caret left of your adornment area
+          pointerEvents: "auto", // still clickable to open
         },
       },
     },
 
-    // NEW: slightly tighten end adornment spacing globally
+    // Slightly tighten the space between value and endAdornment
     MuiInputAdornment: {
       styleOverrides: {
         root: {
@@ -52,12 +57,23 @@ const theme = createTheme({
       },
     },
 
-    // Optional: keep dense/compact inputs tidy inside OutlinedInput
+    /**
+     * "Adorned-aware" spacing for Outlined inputs that are selects
+     * Targets the common case where you render <TextField select ... InputProps={{ endAdornment: ... }}>
+     */
     MuiOutlinedInput: {
       styleOverrides: {
+        root: {
+          // When there is an endAdornment, push the select text + caret further left
+          "&.MuiInputBase-adornedEnd .MuiSelect-select": {
+            paddingRight: 88, // more room so clear/info never overlap text
+          },
+          "&.MuiInputBase-adornedEnd .MuiSelect-icon": {
+            right: 64, // move caret further left to avoid overlapping the adornment
+          },
+        },
         input: {
-          // Prevent text from sliding under icons in some browsers
-          // when multiple end adornments are present
+          // keep native input text from sliding under icons in some browsers
           paddingRight: 8,
         },
       },
