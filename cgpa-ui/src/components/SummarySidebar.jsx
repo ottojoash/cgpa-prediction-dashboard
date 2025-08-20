@@ -1,5 +1,5 @@
 // src/components/SummarySidebar.jsx
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import {
   Paper,
   Typography,
@@ -17,20 +17,15 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-/**
- * Friendly value formatting for common coded fields
- */
+/** Friendly value formatting for common coded fields */
 const formatValue = (key, value) => {
   if (value === null || typeof value === "undefined" || value === "")
     return "—";
 
   switch (key) {
     case "gender":
-      // 1 = Male, 0 = Female (your model)
       return value === 1 ? "Male" : value === 0 ? "Female" : value;
-
     case "marital_status":
-      // 0 Single, 1 Married, 2 Other
       return value === 0
         ? "Single"
         : value === 1
@@ -38,15 +33,11 @@ const formatValue = (key, value) => {
         : value === 2
         ? "Other"
         : value;
-
     case "general_paper":
       return Number(value) === 1 ? "Passed" : "Not passed";
-
     case "is_national":
       return Number(value) === 1 ? "National" : "International";
-
     case "level": {
-      // Sidebar displays the same mapping used in InstitutionalForm (level stored 0‑based)
       const UI_LEVEL_LABELS = {
         1: "Certificate / Diploma",
         2: "Bachelor’s",
@@ -60,15 +51,12 @@ const formatValue = (key, value) => {
       const uiVal = Number(value) + 1;
       return UI_LEVEL_LABELS[uiVal] || `Level ${uiVal}`;
     }
-
     default:
       return value;
   }
 };
 
-/**
- * Small row with tighter spacing and soft alternating background
- */
+/** Small row with tighter spacing and soft alternating background */
 const Row = ({ label, value, muted = false }) => (
   <ListItem
     dense
@@ -98,39 +86,35 @@ const Row = ({ label, value, muted = false }) => (
   </ListItem>
 );
 
-const ControlledSection = ({
-  id,
-  title,
-  subtitle,
-  expandedId,
-  setExpandedId,
-  children,
-}) => {
-  const expanded = expandedId === id;
-  return (
-    <Accordion
-      disableGutters
-      elevation={0}
-      expanded={expanded}
-      onChange={(_, isExp) => setExpandedId(isExp ? id : null)}
-      sx={{ boxShadow: "none" }}
-    >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Typography variant="overline" sx={{ letterSpacing: 0.6 }}>
-            {title}
-          </Typography>
-          {subtitle ? (
-            <Chip size="small" label={subtitle} variant="outlined" />
-          ) : null}
-        </Stack>
-      </AccordionSummary>
-      <AccordionDetails sx={{ pt: 0 }}>{children}</AccordionDetails>
-    </Accordion>
-  );
-};
+/** Controlled section (expanded decided by parent) */
+const Section = ({ title, expanded, onToggle, children, subtitle }) => (
+  <Accordion
+    expanded={expanded}
+    onChange={onToggle}
+    disableGutters
+    sx={{ boxShadow: "none" }}
+  >
+    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Typography variant="overline" sx={{ letterSpacing: 0.6 }}>
+          {title}
+        </Typography>
+        {subtitle ? (
+          <Chip size="small" label={subtitle} variant="outlined" />
+        ) : null}
+      </Stack>
+    </AccordionSummary>
+    <AccordionDetails sx={{ pt: 0 }}>{children}</AccordionDetails>
+  </Accordion>
+);
 
-const SummarySidebar = ({ data }) => {
+const SummarySidebar = ({
+  data,
+  /** which section should be open: 'demographics' | 'olevel' | 'alevel' | 'institutional' */
+  selectedSection = "demographics",
+  /** notify parent when user manually opens a different section */
+  onSectionChange,
+}) => {
   // --- Field groups (split raw vs derived for clarity) ---
   const demogRaw = [
     "marital_status",
@@ -163,29 +147,25 @@ const SummarySidebar = ({ data }) => {
 
   const instRaw = ["level", "campus_id_code", "program_id_code", "is_national"];
 
-  // --- Friendly field labels (left column) ---
+  // --- Friendly field labels ---
   const LABEL = {
     // Demographics
     marital_status: "Marital status",
     gender: "Gender",
     age_at_entry: "Age at entry",
     year_of_entry_code: "Year of entry",
-
     // O‑Level raw
     uce_year_code: "UCE year",
     olevel_subjects: "O‑Level subjects (count)",
     uce_distinctions: "Distinctions (D1–D2 / A)",
     uce_credits: "Credits (C3–C6 / B/C)",
-
     // O‑Level features
     average_olevel_grade: "Avg O‑Level grade",
     count_weak_grades_olevel: "Weak grades (≥7)",
     std_dev_olevel_grade: "Std dev (O‑Level)",
-
     // A‑Level raw
     uace_year_code: "UACE year",
     general_paper: "General Paper",
-
     // A‑Level features
     alevel_average_grade_weight: "Avg grade weight",
     alevel_std_dev_grade_weight: "Std dev (A‑Level)",
@@ -193,7 +173,6 @@ const SummarySidebar = ({ data }) => {
     alevel_count_weak_grades: "Weak grades (D/E/F)",
     high_school_performance_variance: "HS performance variance",
     high_school_performance_stability_index: "HS stability index",
-
     // Institutional
     level: "Academic level",
     campus_id_code: "Campus (code)",
@@ -201,7 +180,7 @@ const SummarySidebar = ({ data }) => {
     is_national: "Nationality",
   };
 
-  // --- Profile completeness (simple: how many from the “important” subset are filled) ---
+  // --- Profile completeness ---
   const importantFields = [...demogRaw, ...olevelRaw, ...alevelRaw, ...instRaw];
   const { filledCount, totalCount } = useMemo(() => {
     let filled = 0;
@@ -213,24 +192,20 @@ const SummarySidebar = ({ data }) => {
   }, [data]);
   const percent = Math.round((filledCount / totalCount) * 100);
 
-  // --- Single‑expand accordion control ---
-  const SECTION_ORDER = [
-    "demographics",
-    "olevel_raw",
-    "olevel_feat",
-    "alevel_raw",
-    "alevel_feat",
-    "institutional",
-  ];
-  const [expandedId, setExpandedId] = useState(SECTION_ORDER[0]);
+  // --- Controlled expansion flags
+  const EXPANDED = {
+    demographics: selectedSection === "demographics",
+    olevel: selectedSection === "olevel",
+    alevel: selectedSection === "alevel",
+    institutional: selectedSection === "institutional",
+  };
 
-  // Safety: if expandedId somehow becomes unknown (e.g., future edits), reset to first
-  useEffect(() => {
-    if (!SECTION_ORDER.includes(expandedId)) {
-      setExpandedId(SECTION_ORDER[0]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expandedId]);
+  // helper to swap open section
+  const handleToggle = (sectionKey) => (_, isExpanded) => {
+    if (!onSectionChange) return;
+    // only allow one open at a time – if user clicks the already-open one, keep it open
+    onSectionChange(isExpanded ? sectionKey : sectionKey);
+  };
 
   return (
     <Paper
@@ -274,11 +249,10 @@ const SummarySidebar = ({ data }) => {
       <Divider sx={{ my: 1.5 }} />
 
       {/* Demographics */}
-      <ControlledSection
-        id="demographics"
+      <Section
         title="Demographics"
-        expandedId={expandedId}
-        setExpandedId={setExpandedId}
+        expanded={EXPANDED.demographics}
+        onToggle={handleToggle("demographics")}
       >
         <List dense disablePadding>
           {demogRaw.map((k) => (
@@ -289,17 +263,16 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </ControlledSection>
+      </Section>
 
       <Divider sx={{ my: 1 }} />
 
       {/* O‑Level */}
-      <ControlledSection
-        id="olevel_raw"
+      <Section
         title="O‑Level"
         subtitle="Raw inputs"
-        expandedId={expandedId}
-        setExpandedId={setExpandedId}
+        expanded={EXPANDED.olevel}
+        onToggle={handleToggle("olevel")}
       >
         <List dense disablePadding>
           {olevelRaw.map((k) => (
@@ -310,14 +283,10 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </ControlledSection>
-
-      <ControlledSection
-        id="olevel_feat"
-        title="O‑Level (Derived features)"
-        expandedId={expandedId}
-        setExpandedId={setExpandedId}
-      >
+        <Divider sx={{ my: 1 }} />
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
+          Derived features
+        </Typography>
         <List dense disablePadding>
           {olevelFeat.map((k) => (
             <Row
@@ -328,17 +297,16 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </ControlledSection>
+      </Section>
 
       <Divider sx={{ my: 1 }} />
 
       {/* A‑Level */}
-      <ControlledSection
-        id="alevel_raw"
+      <Section
         title="A‑Level"
         subtitle="Raw inputs"
-        expandedId={expandedId}
-        setExpandedId={setExpandedId}
+        expanded={EXPANDED.alevel}
+        onToggle={handleToggle("alevel")}
       >
         <List dense disablePadding>
           {alevelRaw.map((k) => (
@@ -349,14 +317,10 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </ControlledSection>
-
-      <ControlledSection
-        id="alevel_feat"
-        title="A‑Level (Derived features)"
-        expandedId={expandedId}
-        setExpandedId={setExpandedId}
-      >
+        <Divider sx={{ my: 1 }} />
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
+          Derived features
+        </Typography>
         <List dense disablePadding>
           {alevelFeat.map((k) => (
             <Row
@@ -367,16 +331,15 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </ControlledSection>
+      </Section>
 
       <Divider sx={{ my: 1 }} />
 
       {/* Institutional */}
-      <ControlledSection
-        id="institutional"
+      <Section
         title="Institutional"
-        expandedId={expandedId}
-        setExpandedId={setExpandedId}
+        expanded={EXPANDED.institutional}
+        onToggle={handleToggle("institutional")}
       >
         <List dense disablePadding>
           {instRaw.map((k) => (
@@ -387,7 +350,7 @@ const SummarySidebar = ({ data }) => {
             />
           ))}
         </List>
-      </ControlledSection>
+      </Section>
     </Paper>
   );
 };
