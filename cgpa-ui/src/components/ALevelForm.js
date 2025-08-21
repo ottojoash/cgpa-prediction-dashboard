@@ -210,7 +210,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         sx={{
           p: 3,
           mb: 3,
-          borderRadius: 3,
+          borderRadius: 1,
           bgcolor: "background.paper",
           borderColor: "divider",
         }}
@@ -247,7 +247,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         sx={{
           p: 2.5,
           mb: 3,
-          borderRadius: 3,
+          borderRadius: 1,
           bgcolor: "background.default",
           borderColor: "divider",
         }}
@@ -278,7 +278,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
           sx={{
             mt: 2,
             p: 2,
-            borderRadius: 2,
+            borderRadius: 1,
             bgcolor: "action.hover",
           }}
         >
@@ -359,7 +359,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         sx={{
           p: 3,
           mb: 3,
-          borderRadius: 3,
+          borderRadius: 1,
           bgcolor: "background.paper",
           borderColor: "divider",
         }}
@@ -399,10 +399,23 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
               <MenuItem value={0}>Did not pass</MenuItem>
             </TextField>
           </Grid>
+        </Grid>
+      </Paper>
 
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 3,
+          mb: 3,
+          borderRadius: 1,
+          bgcolor: "background.paper",
+          borderColor: "divider",
+        }}
+      >
+        <Grid container spacing={2.5}>
           {/* Principal subject letter inputs (render exactly principalCount) */}
           {Array.from({ length: principalCount }).map((_, i) => (
-            <Grid item xs={12} sm={6} md={4} key={i}>
+            <Grid item xs={12} sm={6} md={6} key={i}>
               <TextField
                 select
                 fullWidth
