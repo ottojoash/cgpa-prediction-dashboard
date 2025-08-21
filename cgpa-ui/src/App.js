@@ -73,11 +73,6 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeStep]);
 
-  // const handleFormChange = (field, value) => {
-  //   setFormData((prev) => ({ ...prev, [field]: value }));
-  //   setTouched((t) => ({ ...t, [field]: true }));
-  // };
-
   const handleFormChange = useCallback((field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setTouched((t) => ({ ...t, [field]: true }));
