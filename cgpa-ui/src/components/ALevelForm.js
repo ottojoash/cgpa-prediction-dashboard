@@ -34,7 +34,6 @@ const POINTS = {
 };
 
 // Distinction/weak rules (align with your extractor: Distinction=A; Weak = D/E/F)
-const isDistinction = (letter) => letter === "A";
 const isWeak = (letter) => letter === "D" || letter === "E" || letter === "F";
 
 // UACE year options (current year back 20)
@@ -49,7 +48,7 @@ const SUBJECT_LIMITS = {
 };
 
 // Helper: only emit to parent when values truly changed
-function emitIfChanged(prevRef, next, onChange) {
+function emitIfChanged(prevRef, next, emit) {
   const prev = prevRef.current || {};
   let changed = false;
   for (const k of Object.keys(next)) {
@@ -60,28 +59,19 @@ function emitIfChanged(prevRef, next, onChange) {
   }
   if (changed) {
     prevRef.current = next;
-    for (const [k, v] of Object.entries(next)) onChange(k, v);
+    for (const [k, v] of Object.entries(next)) emit(k, v);
   }
 }
 
 export default function ALevelForm({ data, onChange, touched = {} }) {
-  // ---- Hydrate from parent (so state survives step switches) ----
-  const initialGrading =
-    data.alevel_grading_system && GRADING[data.alevel_grading_system]
-      ? data.alevel_grading_system
-      : GRADING.LEGACY_25;
+  // ---- Make onChange stable for effects (avoid infinite loop) ----
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
-  const limitsFor = (g) =>
-    SUBJECT_LIMITS[g] || SUBJECT_LIMITS[GRADING.LEGACY_25];
-
-  const hydratedCount = Number.isFinite(Number(data.alevel_principal_count))
-    ? Number(data.alevel_principal_count)
-    : limitsFor(initialGrading).min;
-
-  const hydratedSubjects = Array.isArray(data.alevel_subject_letters)
-    ? data.alevel_subject_letters
-    : [];
-
+  // ---- Local UI state (rehydrate from data if present) ----
+  const initialGrading = (data && data._alevel_grading) || GRADING.LEGACY_25;
   const [grading, setGrading] = useState(initialGrading);
 
   const [uaceYear, setUaceYear] = useState(
@@ -94,52 +84,39 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
     typeof data.general_paper === "number" ? data.general_paper : 1
   );
 
-  // Principal subject count – fixed by framework except Competency (2–3 selectable)
-  const [principalCount, setPrincipalCount] = useState(() => {
-    const { min, max } = limitsFor(initialGrading);
-    return Math.min(max, Math.max(min, hydratedCount));
-  });
+  // For count, prefer saved value (if valid for the framework), otherwise min
+  const limitsAtInit = SUBJECT_LIMITS[initialGrading];
+  const savedCount = Number.isFinite(data?._alevel_principalCount)
+    ? data._alevel_principalCount
+    : undefined;
+  const [principalCount, setPrincipalCount] = useState(
+    savedCount
+      ? Math.min(limitsAtInit.max, Math.max(limitsAtInit.min, savedCount))
+      : limitsAtInit.min
+  );
 
-  // Letter grades for principals – start EMPTY; hydrate from parent if present
-  const [subjects, setSubjects] = useState(() => {
-    // ensure array length fits principalCount, fill with ""
-    const base = [...hydratedSubjects];
-    if (base.length < principalCount) {
-      base.push(
-        ...Array.from({ length: principalCount - base.length }, () => "")
-      );
-    } else if (base.length > principalCount) {
-      base.length = principalCount;
-    }
-    // sanitize values
-    return base.map((v) => (LETTERS.includes(v) ? v : ""));
-  });
+  // Subjects: prefer stored array; otherwise start EMPTY (no more default "A")
+  const savedSubjects = Array.isArray(data?._alevel_subjects)
+    ? data._alevel_subjects
+    : null;
+  const [subjects, setSubjects] = useState(
+    savedSubjects && savedSubjects.length
+      ? savedSubjects.slice(0, Math.max(3, principalCount))
+      : Array.from({ length: Math.max(3, principalCount) }, () => "")
+  );
 
-  // Keep grading/principalCount/subjects in parent so they persist across unmounts
+  // Sync principalCount when framework changes (respect limits)
   useEffect(() => {
-    onChange("alevel_grading_system", grading);
-  }, [grading, onChange]);
-
-  useEffect(() => {
-    onChange("alevel_principal_count", principalCount);
-  }, [principalCount, onChange]);
-
-  useEffect(() => {
-    onChange("alevel_subject_letters", subjects);
-  }, [subjects, onChange]);
-
-  // Sync principalCount when framework changes (respect limits) – do not wipe subjects
-  useEffect(() => {
-    const { min, max } = limitsFor(grading);
+    const { min, max } = SUBJECT_LIMITS[grading];
     setPrincipalCount((prev) => {
       if (grading === GRADING.COMPETENCY_60) {
         return Math.min(max, Math.max(min, prev));
       }
-      return min;
+      return min; // fixed for legacy/classic
     });
   }, [grading]);
 
-  // Ensure subjects array has enough slots; trim if too many — keep existing choices
+  // Ensure subjects array has enough slots; trim if too many
   useEffect(() => {
     setSubjects((prev) => {
       let next = [...prev];
@@ -153,6 +130,14 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
       return next;
     });
   }, [principalCount]);
+
+  // Persist UI-only state back to parent (so it survives navigation)
+  useEffect(() => {
+    // write only UI helper fields; model will ignore underscore keys
+    onChangeRef.current("_alevel_grading", grading);
+    onChangeRef.current("_alevel_principalCount", principalCount);
+    onChangeRef.current("_alevel_subjects", subjects);
+  }, [grading, principalCount, subjects]);
 
   // ---- Derived calculations (principals only) ----
   const calc = useMemo(() => {
@@ -201,7 +186,8 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
     };
   }, [grading, subjects, principalCount]);
 
-  // ---- Emit to parent model only when changed ----
+  // ---- Emit to parent model only when data values actually changed
+  // IMPORTANT: do NOT include `onChange` in deps; use onChangeRef to avoid loops.
   const lastEmitted = useRef(null);
   useEffect(() => {
     emitIfChanged(
@@ -211,9 +197,10 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         general_paper: gpPass,
         ...calc,
       },
-      onChange
+      (k, v) => onChangeRef.current(k, v)
     );
-  }, [uaceYear, gpPass, calc, onChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uaceYear, gpPass, calc]); // <-- no `onChange` here
 
   // ---- Field helper ----
   const req = (name, value) => ({
@@ -229,8 +216,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
   });
 
   // UI helpers
-  const isCompetency = grading === GRADING.COMPETENCY_60;
-  const { min: minSubs, max: maxSubs } = limitsFor(grading);
+  const { min: minSubs, max: maxSubs } = SUBJECT_LIMITS[grading];
 
   // ---- Progress (purely visual) ----
   const filledSubjects = subjects
@@ -262,8 +248,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         <Typography variant="body2" color="text.secondary">
           Select the grading era you used, enter your UACE year and General
           Paper result, then choose letter grades for your principal subjects.
-          We’ll compute the model features for you automatically—no extra math
-          needed.
+          We’ll compute the model features automatically.
         </Typography>
 
         <Box sx={{ mt: 2 }}>
@@ -282,7 +267,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         </Box>
       </Paper>
 
-      {/* Framework switch (25 → 18 → Competency) */}
+      {/* Framework switch */}
       <Paper
         variant="outlined"
         sx={{
@@ -321,8 +306,8 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
               <>
                 <strong>Legacy (Max 25 points):</strong> Typically{" "}
                 <strong>4 principal subjects</strong> were offered (letters
-                A–F), with General Paper taken separately. For model features we
-                map A=9, B=8, C=7, D=6, E=5, O=1, F=0.
+                A–F), with General Paper taken separately. Mapping used: A=9,
+                B=8, C=7, D=6, E=5, O=1, F=0.
               </>
             )}
             {grading === GRADING.CLASSIC_18 && (
@@ -339,13 +324,14 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
               <>
                 <strong>Competency‑Based (Current):</strong> Offer{" "}
                 <strong>2–3 principal subjects</strong> plus compulsory core
-                (e.g., GP, Sub‑ICT). For this model we use a broader internal
-                mapping: A≈20, B≈15, C≈10, D≈5, E≈2; O=1, F=0.
+                (e.g., GP, Sub‑ICT). Mapping used: A≈20, B≈15, C≈10, D≈5, E≈2;
+                O=1, F=0.
               </>
             )}
           </Typography>
         </Box>
 
+        {/* Principal count selector */}
         <Box sx={{ mt: 2, display: "flex", gap: 2, alignItems: "center" }}>
           <FormControl size="small" sx={{ width: 280 }}>
             <InputLabel id="principal-count-label">
@@ -357,15 +343,19 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
               value={principalCount}
               onChange={(e) => {
                 const val = Number(e.target.value);
-                const { min, max } = limitsFor(grading);
-                const clamped = Math.min(max, Math.max(min, val));
-                setPrincipalCount(clamped);
+                const { min, max } = SUBJECT_LIMITS[grading];
+                setPrincipalCount(Math.min(max, Math.max(min, val)));
               }}
               disabled={grading !== GRADING.COMPETENCY_60}
             >
               {Array.from(
-                { length: maxSubs - minSubs + 1 },
-                (_, i) => minSubs + i
+                {
+                  length:
+                    SUBJECT_LIMITS[grading].max -
+                    SUBJECT_LIMITS[grading].min +
+                    1,
+                },
+                (_, i) => SUBJECT_LIMITS[grading].min + i
               ).map((n) => (
                 <MenuItem key={n} value={n}>
                   {n} principal{n > 1 ? "s" : ""}
@@ -437,6 +427,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         </Grid>
       </Paper>
 
+      {/* Principal letter inputs */}
       <Paper
         variant="outlined"
         sx={{
@@ -448,14 +439,13 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         }}
       >
         <Grid container spacing={2.5}>
-          {/* Principal subject letter inputs (render exactly principalCount) */}
           {Array.from({ length: principalCount }).map((_, i) => (
             <Grid item xs={12} sm={6} md={6} key={i}>
               <TextField
                 select
                 fullWidth
                 label={`Subject ${i + 1} (Letter grade)`}
-                value={subjects[i] ?? ""} // stays controlled & hydrated
+                value={subjects[i] ?? ""}
                 onChange={(e) => {
                   const next = [...subjects];
                   next[i] = e.target.value;
