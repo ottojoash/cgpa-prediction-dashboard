@@ -9,7 +9,7 @@ const theme = createTheme({
     secondary: { main: "#7aa2f7" },
     text: { primary: "#e6e6e6", secondary: "#a8b0bf" },
   },
-  shape: { borderRadius: 16 },
+  shape: { borderRadius: 8 },
   typography: {
     fontFamily: `"Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial`,
     h4: { fontWeight: 700 },
