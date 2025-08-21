@@ -1,5 +1,5 @@
 // src/App.js
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import axios from "axios";
 import {
   Container,
@@ -73,10 +73,15 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeStep]);
 
-  const handleFormChange = (field, value) => {
+  // const handleFormChange = (field, value) => {
+  //   setFormData((prev) => ({ ...prev, [field]: value }));
+  //   setTouched((t) => ({ ...t, [field]: true }));
+  // };
+
+  const handleFormChange = useCallback((field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setTouched((t) => ({ ...t, [field]: true }));
-  };
+  }, []);
 
   const castPayload = useMemo(() => {
     const n = (v) => (v === "" || v === null ? NaN : Number(v));
