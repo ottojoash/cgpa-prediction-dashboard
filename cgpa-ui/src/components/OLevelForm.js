@@ -1,5 +1,4 @@
-// src/components/OLevelForm.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Grid,
   TextField,
@@ -105,10 +104,7 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
     let statsVector = [];
 
     if (mode === "numeric") {
-      // Numeric exact mapping:
-      // Distinctions: D1 (1), D2 (2)
-      // Credits: C3 (3), C4 (4), C5 (5), C6 (6)
-      // Weak (>=6): C6 (6), P7 (7), P8 (8), F9 (9)
+      // Numeric exact mapping
       const n = numericCounts;
 
       distinctions = (n.D1 || 0) + (n.D2 || 0);
@@ -127,10 +123,7 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         { value: 9, count: n.F9 || 0 },
       ]);
     } else {
-      // Letters approximate mapping:
-      // Distinctions: A
-      // Credits: B + C
-      // Weak (>=6): D + E + F
+      // Letters approximate mapping
       const L = letterCounts;
 
       distinctions = L.A || 0;
@@ -154,47 +147,17 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
   }, [mode, numericCounts, letterCounts]);
 
   // Push derived values to parent any time inputs change
-  const pushDerived = (next = {}) => {
+  const pushDerived = () => {
     onChange("olevel_subjects", subjects || "");
     onChange("uce_distinctions", derived.distinctions);
     onChange("uce_credits", derived.credits);
     onChange("count_weak_grades_olevel", derived.weak);
     onChange("average_olevel_grade", derived.avg);
     onChange("std_dev_olevel_grade", derived.sd);
-    // Optional: also expose how many subjects are “unassigned”
-    if (typeof next === "object") {
-      // noop, just to keep signature flexible
-    }
   };
 
-  // Update handlers for count inputs (numeric & letters)
-  const updateCount = (group, key, raw) => {
-    // Convert to integer (no leading zero in UI) and clamp to remaining
-    const currentTotal =
-      group === "numeric"
-        ? Object.entries(numericCounts).reduce(
-            (s, [k, v]) => (k === key ? s : s + (v || 0)),
-            0
-          )
-        : Object.entries(letterCounts).reduce(
-            (s, [k, v]) => (k === key ? s : s + (v || 0)),
-            0
-          );
-
-    const maxForField = clamp(subjects - currentTotal, 0, subjects);
-    const value = clamp(Number(raw || 0), 0, maxForField);
-
-    if (group === "numeric") {
-      const next = { ...numericCounts, [key]: value };
-      setNumericCounts(next);
-    } else {
-      const next = { ...letterCounts, [key]: value };
-      setLetterCounts(next);
-    }
-  };
-
-  // Keep parent in sync on every render (cheap) so the model always has latest
-  React.useEffect(() => {
+  // Keep parent in sync on every render that matters (cheap)
+  useEffect(() => {
     pushDerived();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjects, mode, numericCounts, letterCounts]);
@@ -229,6 +192,22 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
     pattern: "[0-9]*",
   };
 
+  // ---- YEAR VALIDATION (no layout change)
+  // Rule: O‑Level year must be at least 2 years earlier than UACE year (if UACE known).
+  const uceYear = Number(data.uce_year_code);
+  const uaceYear = Number(data.uace_year_code);
+
+  const uceYearHas = !Number.isNaN(uceYear);
+  const uaceYearHas = !Number.isNaN(uaceYear);
+
+  const uceYearTooLate =
+    uceYearHas && uaceYearHas ? uceYear > uaceYear - 2 : false;
+
+  const uceReq = req("uce_year_code");
+  const uceHelper = uceYearTooLate
+    ? "UCE year should be at least 2 years before UACE year."
+    : uceReq.helperText;
+
   return (
     <>
       <Paper
@@ -249,12 +228,12 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
               fullWidth
               label="UCE Year"
               required
-              {...req("uce_year_code")}
               value={data.uce_year_code || ""}
               onChange={(e) =>
                 onChange("uce_year_code", Number(e.target.value))
               }
-              helperText="Select your UCE sitting year"
+              error={uceReq.error || uceYearTooLate}
+              helperText={uceHelper}
             >
               {uceYears.map((yr) => (
                 <MenuItem key={yr} value={yr}>
@@ -324,7 +303,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
       </Grid>
 
       {/* Counts grid */}
-
       <Paper
         variant="outlined"
         sx={{
@@ -337,7 +315,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         }}
       >
         <Grid container spacing={2}>
-          <br />
           {(mode === "numeric" ? numericFields : letterFields).map(
             ([key, label]) => {
               const src = mode === "numeric" ? numericCounts : letterCounts;
@@ -352,7 +329,21 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
                     type="number"
                     label={label}
                     value={src[key] ?? 0}
-                    onChange={(e) => updateCount(mode, key, e.target.value)}
+                    onChange={(e) => {
+                      // Convert to integer and clamp to remaining
+                      const currentTotal = Object.entries(src).reduce(
+                        (s, [k, v]) => (k === key ? s : s + (v || 0)),
+                        0
+                      );
+                      const max = clamp(subjects - currentTotal, 0, subjects);
+                      const value = clamp(Number(e.target.value || 0), 0, max);
+                      const next = { ...src, [key]: value };
+                      if (mode === "numeric") {
+                        setNumericCounts(next);
+                      } else {
+                        setLetterCounts(next);
+                      }
+                    }}
                     inputProps={{
                       ...numberInputProps,
                       max: clamp(maxForField, 0, subjects),

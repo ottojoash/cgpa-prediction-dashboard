@@ -1,4 +1,3 @@
-// src/components/ALevelForm.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Grid,
@@ -33,7 +32,7 @@ const POINTS = {
   [GRADING.COMPETENCY_60]: { A: 20, B: 15, C: 10, D: 5, E: 2, O: 1, F: 0 },
 };
 
-// Distinction/weak rules (align with your extractor: Distinction=A; Weak = D/E/F)
+// Distinction/weak rules for features
 const isWeak = (letter) => letter === "D" || letter === "E" || letter === "F";
 
 // UACE year options (current year back 20)
@@ -64,13 +63,13 @@ function emitIfChanged(prevRef, next, emit) {
 }
 
 export default function ALevelForm({ data, onChange, touched = {} }) {
-  // ---- Make onChange stable for effects (avoid infinite loop) ----
+  // ---- Stabilize onChange for effects (avoid loops)
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  // ---- Local UI state (rehydrate from data if present) ----
+  // ---- Local UI state (rehydrate from data if present)
   const initialGrading = (data && data._alevel_grading) || GRADING.LEGACY_25;
   const [grading, setGrading] = useState(initialGrading);
 
@@ -95,7 +94,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
       : limitsAtInit.min
   );
 
-  // Subjects: prefer stored array; otherwise start EMPTY (no more default "A")
+  // Subjects: prefer stored array; otherwise start EMPTY
   const savedSubjects = Array.isArray(data?._alevel_subjects)
     ? data._alevel_subjects
     : null;
@@ -133,13 +132,12 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
 
   // Persist UI-only state back to parent (so it survives navigation)
   useEffect(() => {
-    // write only UI helper fields; model will ignore underscore keys
     onChangeRef.current("_alevel_grading", grading);
     onChangeRef.current("_alevel_principalCount", principalCount);
     onChangeRef.current("_alevel_subjects", subjects);
   }, [grading, principalCount, subjects]);
 
-  // ---- Derived calculations (principals only) ----
+  // ---- Derived calculations (principals only)
   const calc = useMemo(() => {
     const pts = POINTS[grading];
     const letters = subjects.slice(0, principalCount).filter((x) => x !== "");
@@ -187,7 +185,6 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
   }, [grading, subjects, principalCount]);
 
   // ---- Emit to parent model only when data values actually changed
-  // IMPORTANT: do NOT include `onChange` in deps; use onChangeRef to avoid loops.
   const lastEmitted = useRef(null);
   useEffect(() => {
     emitIfChanged(
@@ -200,9 +197,9 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
       (k, v) => onChangeRef.current(k, v)
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uaceYear, gpPass, calc]); // <-- no `onChange` here
+  }, [uaceYear, gpPass, calc]);
 
-  // ---- Field helper ----
+  // ---- Field helper
   const req = (name, value) => ({
     value,
     error:
@@ -215,10 +212,25 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
         : " ",
   });
 
-  // UI helpers
+  // ---- YEAR VALIDATION (no layout change)
+  // Rules:
+  // 1) Entry year must be the highest → UACE year should be ≤ entryYear - 1.
+  // 2) (O‑Level < UACE - 2) is handled in OLevelForm; we just validate the A‑Level vs Entry here.
+  const entryYear = Number(data.year_of_entry_code);
+  const entryHas = !Number.isNaN(entryYear);
+  const uaceHas = !Number.isNaN(Number(uaceYear));
+
+  const uaceTooLate = entryHas && uaceHas ? uaceYear > entryYear - 1 : false;
+
+  const uaceReq = req("uace_year_code", uaceYear);
+  const uaceHelper = uaceTooLate
+    ? "UACE year should be at least 1 year before university entry year."
+    : uaceReq.helperText;
+
+  // ---- UI helpers
   const { min: minSubs, max: maxSubs } = SUBJECT_LIMITS[grading];
 
-  // ---- Progress (purely visual) ----
+  // ---- Progress (purely visual)
   const filledSubjects = subjects
     .slice(0, principalCount)
     .filter(Boolean).length;
@@ -399,8 +411,10 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
               select
               fullWidth
               label="UACE Year"
-              {...req("uace_year_code", uaceYear)}
+              value={uaceYear}
               onChange={(e) => setUaceYear(Number(e.target.value))}
+              error={uaceReq.error || uaceTooLate}
+              helperText={uaceHelper}
             >
               {UACE_YEARS.map((y) => (
                 <MenuItem key={y} value={y}>
@@ -416,7 +430,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
               select
               fullWidth
               label="General Paper (Pass?)"
-              {...req("general_paper", gpPass)}
+              value={gpPass}
               onChange={(e) => setGpPass(Number(e.target.value))}
               helperText="Often required for admission; not part of principal‑weight totals."
             >
