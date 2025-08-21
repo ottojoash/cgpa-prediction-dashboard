@@ -13,6 +13,7 @@ import {
   Box,
   Chip,
   Divider,
+  Paper,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
@@ -230,174 +231,222 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
 
   return (
     <>
-      <Grid container spacing={2}>
-        {/* UCE Year */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            fullWidth
-            label="UCE Year"
-            required
-            {...req("uce_year_code")}
-            value={data.uce_year_code || ""}
-            onChange={(e) => onChange("uce_year_code", Number(e.target.value))}
-            helperText="Select your UCE sitting year"
-          >
-            {uceYears.map((yr) => (
-              <MenuItem key={yr} value={yr}>
-                {yr}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2.5,
+          mb: 3,
+          borderRadius: 1,
+          bgcolor: "background.default",
+          borderColor: "divider",
+        }}
+      >
+        <Grid container spacing={2}>
+          {/* UCE Year */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              select
+              fullWidth
+              label="UCE Year"
+              required
+              {...req("uce_year_code")}
+              value={data.uce_year_code || ""}
+              onChange={(e) =>
+                onChange("uce_year_code", Number(e.target.value))
+              }
+              helperText="Select your UCE sitting year"
+            >
+              {uceYears.map((yr) => (
+                <MenuItem key={yr} value={yr}>
+                  {yr}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
 
-        {/* Number of subjects */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Number of subjects"
-            type="number"
-            value={subjects || ""}
-            onChange={(e) => {
-              const v = clamp(Number(e.target.value || 0), MIN_SUBJ, MAX_SUBJ);
-              onChange("olevel_subjects", v);
-            }}
-            inputProps={{ ...numberInputProps, max: MAX_SUBJ }}
-            helperText={`Enter between ${MIN_SUBJ} and ${MAX_SUBJ} subjects`}
-            required
-          />
-        </Grid>
-
-        {/* Mode toggle */}
-        <Grid item xs={12}>
-          <ToggleButtonGroup
-            color="primary"
-            value={mode}
-            exclusive
-            onChange={(_, val) => {
-              if (val) setMode(val);
-            }}
-            aria-label="grading mode"
-          >
-            <ToggleButton value="numeric" aria-label="old grading">
-              Numeric (Old grading)
-            </ToggleButton>
-            <ToggleButton value="letters" aria-label="new grading">
-              Alphabetic (New grading)
-            </ToggleButton>
-          </ToggleButtonGroup>
-          <Box mt={1} display="flex" alignItems="center" gap={1}>
-            <Box flex={1}>
-              <LinearProgress
-                variant="determinate"
-                value={subjects ? (totalAllocated / subjects) * 100 : 0}
-              />
-            </Box>
-            <Chip
-              size="small"
-              label={`${totalAllocated}/${subjects} allocated`}
-              variant="outlined"
+          {/* Number of subjects */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Number of subjects"
+              type="number"
+              value={subjects || ""}
+              onChange={(e) => {
+                const v = clamp(
+                  Number(e.target.value || 0),
+                  MIN_SUBJ,
+                  MAX_SUBJ
+                );
+                onChange("olevel_subjects", v);
+              }}
+              inputProps={{ ...numberInputProps, max: MAX_SUBJ }}
+              helperText={`Enter between ${MIN_SUBJ} and ${MAX_SUBJ} subjects`}
+              required
             />
-            <Tooltip title="You cannot allocate more grades than the total subjects.">
-              <InfoOutlinedIcon fontSize="small" color="action" />
-            </Tooltip>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Mode toggle */}
+      <Grid item xs={12}>
+        <ToggleButtonGroup
+          color="primary"
+          value={mode}
+          exclusive
+          onChange={(_, val) => {
+            if (val) setMode(val);
+          }}
+          aria-label="grading mode"
+        >
+          <ToggleButton value="numeric" aria-label="old grading">
+            Numeric (Old grading)
+          </ToggleButton>
+          <ToggleButton value="letters" aria-label="new grading">
+            Alphabetic (New grading)
+          </ToggleButton>
+        </ToggleButtonGroup>
+        <Box mt={1} display="flex" alignItems="center" gap={1}>
+          <Box flex={1}>
+            <LinearProgress
+              variant="determinate"
+              value={subjects ? (totalAllocated / subjects) * 100 : 0}
+            />
           </Box>
-        </Grid>
-
-        {/* Counts grid */}
-        {(mode === "numeric" ? numericFields : letterFields).map(
-          ([key, label]) => {
-            const src = mode === "numeric" ? numericCounts : letterCounts;
-
-            // Max allowed for this field = remaining + current field value
-            const maxForField = subjects - (totalAllocated - (src[key] || 0));
-
-            return (
-              <Grid item xs={12} sm={4} md={3} key={key}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label={label}
-                  value={src[key] ?? 0}
-                  onChange={(e) => updateCount(mode, key, e.target.value)}
-                  inputProps={{
-                    ...numberInputProps,
-                    max: clamp(maxForField, 0, subjects),
-                  }}
-                  helperText={`Max: ${clamp(maxForField, 0, subjects)}`}
-                  disabled={subjects === 0 || maxForField === 0}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        {/* spacer */}
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-            );
-          }
-        )}
-
-        {/* Divider */}
-        <Grid item xs={12}>
-          <Divider />
-        </Grid>
-
-        {/* Read‑only derived features shown to user (and pushed to parent) */}
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Distinctions (auto)"
-            value={derived.distinctions}
-            fullWidth
-            InputProps={{ readOnly: true }}
-            helperText={mode === "numeric" ? "D1 + D2" : "A"}
+          <Chip
+            size="small"
+            label={`${totalAllocated}/${subjects} allocated`}
+            variant="outlined"
           />
-        </Grid>
-
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Credits (auto)"
-            value={derived.credits}
-            fullWidth
-            InputProps={{ readOnly: true }}
-            helperText={mode === "numeric" ? "C3 + C4 + C5 + C6" : "B + C"}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Weak grades (auto)"
-            value={derived.weak}
-            fullWidth
-            InputProps={{ readOnly: true }}
-            helperText={mode === "numeric" ? "C6 + P7 + P8 + F9" : "D + E + F"}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Average grade (auto)"
-            value={derived.avg}
-            fullWidth
-            InputProps={{ readOnly: true }}
-            helperText={
-              mode === "numeric"
-                ? "Exact mean of 1–9 values"
-                : "Approximate using A≈2 … F=9"
-            }
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Std. deviation (auto)"
-            value={derived.sd}
-            fullWidth
-            InputProps={{ readOnly: true }}
-            helperText="Spread of your grades"
-          />
-        </Grid>
+          <Tooltip title="You cannot allocate more grades than the total subjects.">
+            <InfoOutlinedIcon fontSize="small" color="action" />
+          </Tooltip>
+        </Box>
       </Grid>
+
+      {/* Counts grid */}
+
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 3,
+          mb: 3,
+          borderRadius: 1,
+          bgcolor: "background.paper",
+          borderColor: "divider",
+          marginTop: 2,
+        }}
+      >
+        <Grid container spacing={2}>
+          <br />
+          {(mode === "numeric" ? numericFields : letterFields).map(
+            ([key, label]) => {
+              const src = mode === "numeric" ? numericCounts : letterCounts;
+
+              // Max allowed for this field = remaining + current field value
+              const maxForField = subjects - (totalAllocated - (src[key] || 0));
+
+              return (
+                <Grid item xs={12} sm={6} md={4} key={key}>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label={label}
+                    value={src[key] ?? 0}
+                    onChange={(e) => updateCount(mode, key, e.target.value)}
+                    inputProps={{
+                      ...numberInputProps,
+                      max: clamp(maxForField, 0, subjects),
+                    }}
+                    helperText={`Max: ${clamp(maxForField, 0, subjects)}`}
+                    disabled={subjects === 0 || maxForField === 0}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          {/* spacer */}
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+              );
+            }
+          )}
+        </Grid>
+      </Paper>
+
+      {/* Divider */}
+      <Grid item xs={12}>
+        <Divider />
+      </Grid>
+
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2.5,
+          borderRadius: 1,
+          bgcolor: "action.hover",
+          borderColor: "divider",
+          marginTop: 2,
+        }}
+      >
+        <Grid container spacing={2}>
+          {/* Read‑only derived features shown to user (and pushed to parent) */}
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Distinctions (auto)"
+              value={derived.distinctions}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              helperText={mode === "numeric" ? "D1 + D2" : "A"}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Credits (auto)"
+              value={derived.credits}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              helperText={mode === "numeric" ? "C3 + C4 + C5 + C6" : "B + C"}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Weak grades (auto)"
+              value={derived.weak}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              helperText={
+                mode === "numeric" ? "C6 + P7 + P8 + F9" : "D + E + F"
+              }
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Average grade (auto)"
+              value={derived.avg}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              helperText={
+                mode === "numeric"
+                  ? "Exact mean of 1–9 values"
+                  : "Approximate using A≈2 … F=9"
+              }
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Std. deviation (auto)"
+              value={derived.sd}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              helperText="Spread of your grades"
+            />
+          </Grid>
+        </Grid>
+      </Paper>
     </>
   );
 };
