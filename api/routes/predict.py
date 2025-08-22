@@ -1,8 +1,9 @@
 # routes/predictor.py
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field, Extra
+from pydantic import BaseModel, Extra
 from models.predictor import CGPAPredictor
 from pathlib import Path
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -10,6 +11,7 @@ router = APIRouter()
 MODEL_PATH = Path(__file__).resolve().parents[2] / "final_best_cgpa_model.pkl"
 predictor = CGPAPredictor(MODEL_PATH)
 
+# ---------- Request schema (unchanged) ----------
 class PredictionRequest(BaseModel):
     # Demographics / institutional
     age_at_entry: float
@@ -50,25 +52,59 @@ class PredictionRequest(BaseModel):
         # If the UI accidentally sends extra fields, ignore them instead of 422
         extra = Extra.ignore
 
+
+# ---------- Response schema (enhanced) ----------
+class ImportanceItem(BaseModel):
+    feature: str
+    importance: float
+
+class ComparisonItem(BaseModel):
+    feature: str
+    student_value: Optional[float] = None
+    mean: Optional[float] = None
+    p25: Optional[float] = None
+    p50: Optional[float] = None
+    p75: Optional[float] = None
+    status: Optional[str] = None  # "above average" | "below average" | "at average" | None
+
+class ShapItem(BaseModel):
+    feature: str
+    shap: float
+
+class ShapPayload(BaseModel):
+    expected_value: Optional[float]
+    values: List[ShapItem]
+
 class PredictionResponse(BaseModel):
     predicted_cgpa: float
     performance_band: str
+    global_importance: List[ImportanceItem] = []
+    comparisons: List[ComparisonItem] = []
+    shap: ShapPayload = ShapPayload(expected_value=None, values=[])
+    guidance: List[str] = []
+
 
 @router.post("/api/predict", response_model=PredictionResponse)
 async def predict_cgpa(request: PredictionRequest):
+    """
+    Returns a rich payload:
+      - predicted_cgpa, performance_band
+      - global_importance (top ~8)
+      - comparisons (student vs. cohort stats if metadata available)
+      - shap (local explanation) when SHAP is available
+      - guidance (2–4 short tips)
+    """
     try:
-        prediction = predictor.predict(request.dict())
-        return PredictionResponse(
-            predicted_cgpa=prediction["predicted_cgpa"],
-            performance_band=prediction["performance_band"],
-        )
+        enriched = predictor.predict(request.dict())
+        return PredictionResponse(**enriched)
     except KeyError as ke:
         # This would only happen if any of the 23 keys is missing internally
         raise HTTPException(status_code=400, detail=f"Missing required feature: {ke}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/api/lookups")
 async def get_lookups():
-    # Drop curriculum; only return what UI needs
+    # Keep light; you can backfill campus/program lists later
     return {"campus_ids": [], "program_ids": []}
