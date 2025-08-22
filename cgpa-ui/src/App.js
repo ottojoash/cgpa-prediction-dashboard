@@ -22,6 +22,7 @@ import OLevelForm from "./components/OLevelForm";
 import ALevelForm from "./components/ALevelForm";
 import InstitutionalForm from "./components/InstitutionalForm";
 import SummarySidebar from "./components/SummarySidebar";
+import ResultPanel from "./components/ResultPanel";
 
 const steps = ["Demographics", "O-Level", "A-Level", "Institutional", "Review"];
 
@@ -257,6 +258,11 @@ function App() {
                     🧠 <strong>Performance Band:</strong>{" "}
                     {result.performance_band}
                   </Alert>
+                )}{" "}
+                {result && (
+                  <Box sx={{ mt: 2 }}>
+                    <ResultPanel result={result} payload={castPayload} />
+                  </Box>
                 )}
                 {error && (
                   <Alert severity="error" sx={{ mt: 2 }}>
