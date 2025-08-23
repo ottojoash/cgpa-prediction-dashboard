@@ -31,6 +31,7 @@ import {
   Tooltip as RTooltip,
   ResponsiveContainer,
   Cell,
+  ReferenceLine
 } from "recharts";
 
 /**
@@ -340,18 +341,35 @@ export default function ResultsPanel({ result, payload }) {
           {topShap.length > 0 ? (
             <Box sx={{ height: 320 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[...topShap].reverse()}>
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="feature" width={120} />
-                  <RTooltip
-                    formatter={(v, n, item) =>
-                      `${item.payload.shap.toFixed(
-                        3
-                      )} (|Δ| ${item.payload.abs.toFixed(3)})`
-                    }
+                {/* Horizontal bars need layout="vertical" */}
+                <BarChart
+                  data={[...topShap].reverse()} // top to bottom, biggest on top
+                  layout="vertical"
+                  margin={{ top: 8, right: 24, bottom: 8, left: 140 }} // space for labels
+                >
+                  {/* Value axis (horizontal) */}
+                  <XAxis
+                    type="number"
+                    domain={["dataMin", "dataMax"]}
+                    allowDecimals
                   />
-                  <Bar dataKey="shap">
-                    {topShap.map((d, idx) => (
+                  {/* Category axis (vertical) */}
+                  <YAxis
+                    type="category"
+                    dataKey="feature"
+                    width={140} // prevent truncation of long names
+                    tick={{ fontSize: 12 }}
+                  />
+                  <RTooltip
+                    formatter={(_, __, item) => {
+                      const { shap, abs } = item.payload;
+                      return `${shap.toFixed(3)} (|Δ| ${abs.toFixed(3)})`;
+                    }}
+                  />
+                  <ReferenceLine x={0} stroke="#808080" strokeDasharray="3 3" />
+
+                  <Bar dataKey="shap" barSize={18}>
+                    {[...topShap].reverse().map((d, idx) => (
                       <Cell
                         key={idx}
                         fill={d.shap >= 0 ? "#29b77b" : "#ff7f66"}
