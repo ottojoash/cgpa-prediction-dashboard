@@ -295,9 +295,10 @@ export default function ResultsPanel({ result, payload }) {
             Global Feature Importance (model-wide)
           </Typography>
           {globalImp.length > 0 ? (
-            <Box sx={{ height: 320 }}>
+            <Box sx={{ height: 400 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
+                  margin={{ top: 8, right: 24, left: 8, bottom: 55 }}
                   data={[...globalImp].sort(
                     (a, b) => b.importance - a.importance
                   )}
