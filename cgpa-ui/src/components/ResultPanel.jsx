@@ -14,9 +14,15 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DownloadIcon from "@mui/icons-material/Download";
+import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
+
 import {
   BarChart,
   Bar,
@@ -206,53 +212,45 @@ export default function ResultsPanel({ result, payload }) {
 
           <Divider sx={{ my: 2 }} />
 
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
+          <Paper
+            variant="outlined"
             sx={{
-              flexWrap: "wrap",
-              alignItems: "flex-start",
+              p: 2,
+              bgcolor: "background.paper",
+              borderColor: "divider",
             }}
           >
-            {guidance.map((g, i) => (
-              <Chip
-                key={i}
-                variant="outlined"
-                label={g}
-                sx={{
-                  // let Chips grow vertically for long text
-                  height: "auto",
-                  alignItems: "flex-start",
-                  maxWidth: { xs: "100%", sm: "48%", md: "32%" }, // responsive wrapping
-                  whiteSpace: "normal",
-                  // make the internal label wrap
-                  "& .MuiChip-label": {
-                    display: "block",
-                    whiteSpace: "normal",
-                    textAlign: "left",
-                    paddingY: 0.5,
-                  },
-                }}
-              />
-            ))}
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Insights
+            </Typography>
+            <Divider sx={{ mb: 1 }} />
 
-            {guidance.length === 0 && (
+            {guidance.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
                 No tailored guidance available.
               </Typography>
+            ) : (
+              <List dense disablePadding>
+                {guidance.map((g, i) => (
+                  <ListItem
+                    key={i}
+                    sx={{
+                      alignItems: "flex-start",
+                      py: 0.5,
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 32, mt: "2px" }}>
+                      <TipsAndUpdatesIcon fontSize="small" color="primary" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primaryTypographyProps={{ variant: "body2" }}
+                      primary={g}
+                    />
+                  </ListItem>
+                ))}
+              </List>
             )}
-          </Stack>
-
-          <Box sx={{ mt: 2 }}>
-            <Button
-              startIcon={<DownloadIcon />}
-              onClick={downloadJSON}
-              variant="outlined"
-            >
-              Download full JSON
-            </Button>
-          </Box>
+          </Paper>
         </Paper>
 
         {/* Raw response (collapsible) */}
@@ -278,6 +276,15 @@ export default function ResultsPanel({ result, payload }) {
             </pre>
           </AccordionDetails>
         </Accordion>
+        <Box sx={{ mt: 2 }}>
+          <Button
+            startIcon={<DownloadIcon />}
+            onClick={downloadJSON}
+            variant="outlined"
+          >
+            Download full JSON
+          </Button>
+        </Box>
       </Grid>
 
       {/* Right: charts */}
