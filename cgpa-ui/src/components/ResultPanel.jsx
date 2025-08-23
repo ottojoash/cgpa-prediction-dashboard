@@ -1,11 +1,10 @@
 // src/components/ResultPanel.jsx
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Paper,
   Typography,
   Chip,
-  Divider,
   Grid,
   LinearProgress,
   Tooltip,
