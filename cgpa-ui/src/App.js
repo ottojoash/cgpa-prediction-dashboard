@@ -36,35 +36,36 @@ const sectionToStep = {
   institutional: 3,
 };
 
+// keep a single source of truth for a blank form
+const getInitialFormData = () => ({
+  age_at_entry: "",
+  marital_status: "",
+  is_national: "",
+  gender: "",
+  level: "",
+  year_of_entry_code: "",
+  uce_year_code: "",
+  olevel_subjects: "",
+  uce_distinctions: "",
+  uce_credits: "",
+  average_olevel_grade: "",
+  count_weak_grades_olevel: "",
+  std_dev_olevel_grade: "",
+  uace_year_code: "",
+  general_paper: "",
+  alevel_average_grade_weight: "",
+  alevel_std_dev_grade_weight: "",
+  alevel_dominant_grade_weight: "",
+  alevel_count_weak_grades: "",
+  campus_id_code: "",
+  program_id_code: "",
+  high_school_performance_variance: "",
+  high_school_performance_stability_index: "",
+});
+
 function App() {
   const [activeStep, setActiveStep] = useState(0);
-
-  const [formData, setFormData] = useState({
-    age_at_entry: "",
-    marital_status: "",
-    is_national: "",
-    gender: "",
-    level: "",
-    year_of_entry_code: "",
-    uce_year_code: "",
-    olevel_subjects: "",
-    uce_distinctions: "",
-    uce_credits: "",
-    average_olevel_grade: "",
-    count_weak_grades_olevel: "",
-    std_dev_olevel_grade: "",
-    uace_year_code: "",
-    general_paper: "",
-    alevel_average_grade_weight: "",
-    alevel_std_dev_grade_weight: "",
-    alevel_dominant_grade_weight: "",
-    alevel_count_weak_grades: "",
-    campus_id_code: "",
-    program_id_code: "",
-    high_school_performance_variance: "",
-    high_school_performance_stability_index: "",
-  });
-
+  const [formData, setFormData] = useState(getInitialFormData);
   const [touched, setTouched] = useState({});
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -126,6 +127,14 @@ function App() {
   const handleNext = () =>
     setActiveStep((s) => Math.min(s + 1, steps.length - 1));
   const handleBack = () => setActiveStep((s) => Math.max(s - 1, 0));
+
+  const handleReset = () => {
+    setFormData(getInitialFormData());
+    setTouched({});
+    setResult(null);
+    setError(null);
+    setActiveStep(0);
+  };
 
   const handleSubmit = async () => {
     if (missingFields.length > 0) {
@@ -226,27 +235,46 @@ function App() {
                 title="Review & Submit"
                 subtitle="Confirm all details are correct"
                 actions={
-                  <>
-                    <Button
-                      variant="outlined"
-                      onClick={handleBack}
-                      sx={{ mr: 1 }}
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleSubmit}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <CircularProgress size={20} />
-                      ) : (
-                        "Predict CGPA"
-                      )}
-                    </Button>
-                  </>
+                  result ? (
+                    <>
+                      <Button
+                        variant="outlined"
+                        onClick={handleBack}
+                        sx={{ mr: 1 }}
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleReset}
+                      >
+                        Start New Prediction
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outlined"
+                        onClick={handleBack}
+                        sx={{ mr: 1 }}
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          "Predict CGPA"
+                        )}
+                      </Button>
+                    </>
+                  )
                 }
               >
                 {result && (
