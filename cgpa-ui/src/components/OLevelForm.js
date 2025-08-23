@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useEffect } from "react";
 import {
   Grid,
   TextField,
@@ -15,18 +15,13 @@ import {
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
-// UCE year options (feel free to adjust the range)
 const thisYear = new Date().getFullYear();
-const uceYears = Array.from({ length: 26 }, (_, i) => thisYear - i); // this year back 25 yrs
+const uceYears = Array.from({ length: 26 }, (_, i) => thisYear - i);
 
-// Allowed subject bounds
 const MIN_SUBJ = 6;
 const MAX_SUBJ = 10;
-
-// ---------- Helpers ----------
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
-// Build a vector of repeated values from {value:grade, count:n}
 const expand = (pairs) => {
   const out = [];
   for (const { value, count } of pairs) {
@@ -39,30 +34,16 @@ const mean = (arr) =>
   arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 const stddev = (arr, m) => {
   if (!arr.length) return 0;
-  const v = arr.reduce((sum, x) => sum + Math.pow(x - m, 2), 0) / arr.length;
+  const v = arr.reduce((s, x) => s + Math.pow(x - m, 2), 0) / arr.length;
   return Math.sqrt(v);
 };
 
-// Mapping for “new” (letter) → representative numeric value for stats
-// (A≈2, B≈4, C≈6, D≈7.5, E≈8.5, F=9)
 const LETTER_TO_NUM = { A: 2, B: 4, C: 6, D: 7.5, E: 8.5, F: 9 };
 
-// ---------- Component ----------
 const OLevelForm = ({ data, onChange, touched = {} }) => {
-  const [mode, setMode] = useState("numeric"); // 'numeric' (old) | 'letters' (new)
-
-  // Core field binding (keeps your original API)
-  const req = (name) => ({
-    value: data[name] ?? "",
-    error: touched[name] && (data[name] === "" || data[name] === null),
-    helperText:
-      touched[name] && (data[name] === "" || data[name] === null)
-        ? "Required"
-        : " ",
-  });
-
-  // Local counts (we keep them ephemeral; we compute and push derived features up)
-  const [numericCounts, setNumericCounts] = useState({
+  // ---- read persisted UI state from parent ----
+  const mode = data.olevel_mode || "numeric";
+  const numericCounts = data.olevel_numericCounts || {
     D1: 0,
     D2: 0,
     C3: 0,
@@ -72,44 +53,42 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
     P7: 0,
     P8: 0,
     F9: 0,
-  });
-
-  const [letterCounts, setLetterCounts] = useState({
+  };
+  const letterCounts = data.olevel_letterCounts || {
     A: 0,
     B: 0,
     C: 0,
     D: 0,
     E: 0,
     F: 0,
+  };
+
+  const req = (name) => ({
+    value: data[name] ?? "",
+    error: touched[name] && (data[name] === "" || data[name] === null),
+    helperText:
+      touched[name] && (data[name] === "" || data[name] === null)
+        ? "Required"
+        : " ",
   });
 
-  // Subjects entered (we allow user to type freely but clamp 6–10)
   const subjects = clamp(Number(data.olevel_subjects || 0), MIN_SUBJ, MAX_SUBJ);
 
-  // Totals (depending on active mode)
   const totalAllocated = useMemo(() => {
     const src = mode === "numeric" ? numericCounts : letterCounts;
     return Object.values(src).reduce((a, b) => a + Number(b || 0), 0);
   }, [mode, numericCounts, letterCounts]);
 
-  // const remaining = clamp(subjects - totalAllocated, 0, MAX_SUBJ);
-
-  // --------- Derived features (computed live) ----------
   const derived = useMemo(() => {
-    // Distinctions / Credits / Weak and stats
-    let distinctions = 0;
-    let credits = 0;
-    let weak = 0;
-    let statsVector = [];
-
+    let distinctions = 0,
+      credits = 0,
+      weak = 0,
+      statsVector = [];
     if (mode === "numeric") {
-      // Numeric exact mapping
       const n = numericCounts;
-
       distinctions = (n.D1 || 0) + (n.D2 || 0);
       credits = (n.C3 || 0) + (n.C4 || 0) + (n.C5 || 0) + (n.C6 || 0);
       weak = (n.C6 || 0) + (n.P7 || 0) + (n.P8 || 0) + (n.F9 || 0);
-
       statsVector = expand([
         { value: 1, count: n.D1 || 0 },
         { value: 2, count: n.D2 || 0 },
@@ -122,13 +101,10 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         { value: 9, count: n.F9 || 0 },
       ]);
     } else {
-      // Letters approximate mapping
       const L = letterCounts;
-
       distinctions = L.A || 0;
       credits = (L.B || 0) + (L.C || 0);
       weak = (L.D || 0) + (L.E || 0) + (L.F || 0);
-
       statsVector = expand([
         { value: LETTER_TO_NUM.A, count: L.A || 0 },
         { value: LETTER_TO_NUM.B, count: L.B || 0 },
@@ -138,30 +114,22 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         { value: LETTER_TO_NUM.F, count: L.F || 0 },
       ]);
     }
-
     const avg = Number(mean(statsVector).toFixed(2));
     const sd = Number(stddev(statsVector, mean(statsVector)).toFixed(3));
-
     return { distinctions, credits, weak, avg, sd };
   }, [mode, numericCounts, letterCounts]);
 
-  // Push derived values to parent any time inputs change
-  const pushDerived = () => {
+  // Push derived features up whenever inputs change
+  useEffect(() => {
     onChange("olevel_subjects", subjects || "");
     onChange("uce_distinctions", derived.distinctions);
     onChange("uce_credits", derived.credits);
     onChange("count_weak_grades_olevel", derived.weak);
     onChange("average_olevel_grade", derived.avg);
     onChange("std_dev_olevel_grade", derived.sd);
-  };
-
-  // Keep parent in sync on every render that matters (cheap)
-  useEffect(() => {
-    pushDerived();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subjects, mode, numericCounts, letterCounts]);
+  }, [subjects, mode, numericCounts, letterCounts, derived]);
 
-  // Fields for the two modes
   const numericFields = [
     ["D1", "D1 (Grade 1)"],
     ["D2", "D2 (Grade 2)"],
@@ -183,7 +151,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
     ["F", "F (Fail 9)"],
   ];
 
-  // Reusable number input props: plain numbers, arrow step 1, min 0, dynamic max
   const numberInputProps = {
     inputMode: "numeric",
     step: 1,
@@ -191,13 +158,11 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
     pattern: "[0-9]*",
   };
 
+  // Entry-year validation (UCE >= 3 years before entry)
   const uceYear = Number(data.uce_year_code);
   const entryYear = Number(data.year_of_entry_code);
-
   const uceYearHas = !Number.isNaN(uceYear);
   const entryYearHas = !Number.isNaN(entryYear);
-
-  // UCE should be at least 3 years before entry year
   const uceYearTooLate =
     uceYearHas && entryYearHas ? uceYear > entryYear - 3 : false;
 
@@ -219,7 +184,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         }}
       >
         <Grid container spacing={2}>
-          {/* UCE Year */}
           <Grid item xs={12} sm={6}>
             <TextField
               select
@@ -240,8 +204,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
               ))}
             </TextField>
           </Grid>
-
-          {/* Number of subjects */}
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -264,14 +226,13 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         </Grid>
       </Paper>
 
-      {/* Mode toggle */}
       <Grid item xs={12}>
         <ToggleButtonGroup
           color="primary"
           value={mode}
           exclusive
           onChange={(_, val) => {
-            if (val) setMode(val);
+            if (val) onChange("olevel_mode", val);
           }}
           aria-label="grading mode"
         >
@@ -300,7 +261,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         </Box>
       </Grid>
 
-      {/* Counts grid */}
       <Paper
         variant="outlined"
         sx={{
@@ -309,15 +269,13 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
           borderRadius: 1,
           bgcolor: "background.paper",
           borderColor: "divider",
-          marginTop: 2,
+          mt: 2,
         }}
       >
         <Grid container spacing={2}>
           {(mode === "numeric" ? numericFields : letterFields).map(
             ([key, label]) => {
               const src = mode === "numeric" ? numericCounts : letterCounts;
-
-              // Max allowed for this field = remaining + current field value
               const maxForField = subjects - (totalAllocated - (src[key] || 0));
 
               return (
@@ -328,18 +286,21 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
                     label={label}
                     value={src[key] ?? 0}
                     onChange={(e) => {
-                      // Convert to integer and clamp to remaining
-                      const currentTotal = Object.entries(src).reduce(
+                      const base = {
+                        ...(mode === "numeric" ? numericCounts : letterCounts),
+                      };
+                      const currentTotal = Object.entries(base).reduce(
                         (s, [k, v]) => (k === key ? s : s + (v || 0)),
                         0
                       );
                       const max = clamp(subjects - currentTotal, 0, subjects);
                       const value = clamp(Number(e.target.value || 0), 0, max);
-                      const next = { ...src, [key]: value };
+                      base[key] = value;
+
                       if (mode === "numeric") {
-                        setNumericCounts(next);
+                        onChange("olevel_numericCounts", base);
                       } else {
-                        setLetterCounts(next);
+                        onChange("olevel_letterCounts", base);
                       }
                     }}
                     inputProps={{
@@ -349,11 +310,7 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
                     helperText={`Max: ${clamp(maxForField, 0, subjects)}`}
                     disabled={subjects === 0 || maxForField === 0}
                     InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {/* spacer */}
-                        </InputAdornment>
-                      ),
+                      endAdornment: <InputAdornment position="end" />,
                     }}
                   />
                 </Grid>
@@ -363,7 +320,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
         </Grid>
       </Paper>
 
-      {/* Divider */}
       <Grid item xs={12}>
         <Divider />
       </Grid>
@@ -375,11 +331,10 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
           borderRadius: 1,
           bgcolor: "action.hover",
           borderColor: "divider",
-          marginTop: 2,
+          mt: 2,
         }}
       >
         <Grid container spacing={2}>
-          {/* Read‑only derived features shown to user (and pushed to parent) */}
           <Grid item xs={12} sm={4}>
             <TextField
               label="Distinctions (auto)"
@@ -389,7 +344,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
               helperText={mode === "numeric" ? "D1 + D2" : "A"}
             />
           </Grid>
-
           <Grid item xs={12} sm={4}>
             <TextField
               label="Credits (auto)"
@@ -399,7 +353,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
               helperText={mode === "numeric" ? "C3 + C4 + C5 + C6" : "B + C"}
             />
           </Grid>
-
           <Grid item xs={12} sm={4}>
             <TextField
               label="Weak grades (auto)"
@@ -411,7 +364,6 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
               }
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               label="Average grade (auto)"
