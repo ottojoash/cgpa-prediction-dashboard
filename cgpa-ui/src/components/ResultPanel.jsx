@@ -206,10 +206,37 @@ export default function ResultsPanel({ result, payload }) {
 
           <Divider sx={{ my: 2 }} />
 
-          <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              flexWrap: "wrap",
+              alignItems: "flex-start",
+            }}
+          >
             {guidance.map((g, i) => (
-              <Chip key={i} label={g} variant="outlined" />
+              <Chip
+                key={i}
+                variant="outlined"
+                label={g}
+                sx={{
+                  // let Chips grow vertically for long text
+                  height: "auto",
+                  alignItems: "flex-start",
+                  maxWidth: { xs: "100%", sm: "48%", md: "32%" }, // responsive wrapping
+                  whiteSpace: "normal",
+                  // make the internal label wrap
+                  "& .MuiChip-label": {
+                    display: "block",
+                    whiteSpace: "normal",
+                    textAlign: "left",
+                    paddingY: 0.5,
+                  },
+                }}
+              />
             ))}
+
             {guidance.length === 0 && (
               <Typography variant="body2" color="text.secondary">
                 No tailored guidance available.
