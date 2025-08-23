@@ -228,7 +228,7 @@ export default function ALevelForm({ data, onChange, touched = {} }) {
     : uaceReq.helperText;
 
   // ---- UI helpers
-  const { min: minSubs, max: maxSubs } = SUBJECT_LIMITS[grading];
+  // const { min: minSubs, max: maxSubs } = SUBJECT_LIMITS[grading];
 
   // ---- Progress (purely visual)
   const filledSubjects = subjects

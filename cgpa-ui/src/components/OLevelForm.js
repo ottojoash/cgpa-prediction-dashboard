@@ -3,7 +3,6 @@ import {
   Grid,
   TextField,
   MenuItem,
-  Typography,
   ToggleButtonGroup,
   ToggleButton,
   Tooltip,
@@ -93,7 +92,7 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
     return Object.values(src).reduce((a, b) => a + Number(b || 0), 0);
   }, [mode, numericCounts, letterCounts]);
 
-  const remaining = clamp(subjects - totalAllocated, 0, MAX_SUBJ);
+  // const remaining = clamp(subjects - totalAllocated, 0, MAX_SUBJ);
 
   // --------- Derived features (computed live) ----------
   const derived = useMemo(() => {
@@ -192,20 +191,19 @@ const OLevelForm = ({ data, onChange, touched = {} }) => {
     pattern: "[0-9]*",
   };
 
-  // ---- YEAR VALIDATION (no layout change)
-  // Rule: O‑Level year must be at least 2 years earlier than UACE year (if UACE known).
   const uceYear = Number(data.uce_year_code);
-  const uaceYear = Number(data.uace_year_code);
+  const entryYear = Number(data.year_of_entry_code);
 
   const uceYearHas = !Number.isNaN(uceYear);
-  const uaceYearHas = !Number.isNaN(uaceYear);
+  const entryYearHas = !Number.isNaN(entryYear);
 
+  // UCE should be at least 3 years before entry year
   const uceYearTooLate =
-    uceYearHas && uaceYearHas ? uceYear > uaceYear - 2 : false;
+    uceYearHas && entryYearHas ? uceYear > entryYear - 3 : false;
 
   const uceReq = req("uce_year_code");
   const uceHelper = uceYearTooLate
-    ? "UCE year should be at least 2 years before UACE year."
+    ? "UCE year should be at least 3 years before Entry Year."
     : uceReq.helperText;
 
   return (
