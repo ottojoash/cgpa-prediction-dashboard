@@ -12,10 +12,11 @@ import {
   Step,
   StepLabel,
   Box,
-  ThemeProvider,
   CssBaseline,
+  ThemeProvider,
 } from "@mui/material";
 import theme from "./styles/theme";
+
 import SectionCard from "./components/SectionCard";
 import DemographicsForm from "./components/DemographicsForm";
 import OLevelForm from "./components/OLevelForm";
@@ -258,12 +259,14 @@ function App() {
                     🧠 <strong>Performance Band:</strong>{" "}
                     {result.performance_band}
                   </Alert>
-                )}{" "}
+                )}
+
                 {result && (
                   <Box sx={{ mt: 2 }}>
                     <ResultPanel result={result} payload={castPayload} />
                   </Box>
                 )}
+
                 {error && (
                   <Alert severity="error" sx={{ mt: 2 }}>
                     {error}
