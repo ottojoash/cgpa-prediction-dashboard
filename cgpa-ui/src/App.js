@@ -147,7 +147,8 @@ function App() {
     setError(null);
     setResult(null);
     try {
-      const API = process.env.REACT_APP_API_BASE || "http://localhost:8000";
+      // const API = process.env.REACT_APP_API_BASE || "http://localhost:8000";
+      const API = process.env.REACT_APP_API_BASE || "https://cgpa-prediction-dashboard.onrender.com";
       const response = await axios.post(`${API}/api/predict`, castPayload);
       setResult(response.data);
       setActiveStep(steps.length - 1);
