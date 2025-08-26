@@ -216,17 +216,17 @@ class CGPAPredictor:
         gp = row.get("general_paper")
 
         if a_avg is not None:
-            tips.append("Strong A‑Level average tends to correlate with higher CGPA; maintain that trend with consistent term‑by‑term performance.")
+            tips.append("Strong A‑Level average tends to correlate with higher CGPA.")
         if o_avg is not None and a_avg is not None:
-            tips.append("Your O‑Level and A‑Level profiles together are influential; reinforcing fundamentals (maths, reading) can improve consistency.")
+            tips.append("Your O‑Level and A‑Level profiles together are influential.")
         if isinstance(a_weak, (int, float)) and a_weak >= 3:
-            tips.append("Multiple weak A‑Level grades historically reduce CGPA. Focus on remediation in foundational topics and timed practice.")
+            tips.append("Multiple weak A‑Level grades historically reduce CGPA.")
         if isinstance(hs_stab, (int, float)) and hs_stab < 0.7:
-            tips.append("Your high‑school stability index is below cohort median; steady weekly study routines tend to boost outcomes.")
+            tips.append("Your high‑school stability index is below the general median.")
         if gp is not None and int(gp) == 0:
-            tips.append("General Paper not passed: improve academic writing and research skills—they contribute to better coursework outcomes.")
+            tips.append("General Paper not passed")
         if not tips:
-            tips.append("Stay consistent with workload planning and targeted practice; consistency is a strong predictor of positive outcomes.")
+            tips.append("Consistency is a strong predictor of positive outcomes.")
 
         # De‑duplicate while preserving order
         seen = set()

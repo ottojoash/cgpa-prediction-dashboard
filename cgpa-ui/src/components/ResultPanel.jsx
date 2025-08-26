@@ -446,7 +446,7 @@ export default function ResultsPanel({ result, payload }) {
               color="text.secondary"
               sx={{ display: "block", mt: 1 }}
             >
-              Comparisons use training‑set summaries from{" "}
+              Comparisons use training‑set summaries that have been stored in the {" "}
               <code>metadata.json</code>.
             </Typography>
           </Paper>
